@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # 后端服务
+  backend:
+    build: ./backend
+    container_name: remote-claude-backend
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./backend/.env:/app/.env
+      - /tmp:/tmp  # tmux socket
+    environment:
+      - PORT=9090
+    privileged: true  # tmux 需要
+    network_mode: host  # 使用主机网络，方便访问 tmux
+    restart: unless-stopped
+
+  # 前端服务
+  frontend:
+    build: ./frontend
+    container_name: remote-claude-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Frp 客户端（可选）
+  frpc:
+    image: snowdreamtech/frpc:latest
+    container_name: remote-claude-frpc
+    volumes:
+      - ./frp/frpc.ini:/etc/frp/frpc.ini
+    restart: unless-stopped
+    profiles:
+      - frp
+
+  # Cloudflare Tunnel（可选）
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: remote-claude-cloudflared
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    restart: unless-stopped
+    profiles:
+      - cloudflare

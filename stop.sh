@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# Remote Claude Code Stop Script
+# Remote Claude Code 停止脚本
+
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+echo -e "${BLUE}"
+echo "🛑 Stopping Remote Claude Code"
+echo "================================"
+echo -e "${NC}"
+
+# Load config for PID directory
+PID_DIR="./logs"
+if [ -f "config.ini" ]; then
+    source "config.ini"
+    PID_DIR=${PID_DIR:-./logs}
+fi
+
+# Function to stop a service by PID file
+stop_service() {
+    local name=$1
+    local pid_file="$PID_DIR/${name}.pid"
+
+    if [ -f "$pid_file" ]; then
+        local pid=$(cat "$pid_file")
+        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+            echo -e "${YELLOW}Stopping $name (PID: $pid)...${NC}"
+            kill "$pid" 2>/dev/null
+
+            # Wait for process to stop
+            local count=0
+            while kill -0 "$pid" 2>/dev/null && [ $count -lt 10 ]; do
+                sleep 1
+                count=$((count + 1))
+            done
+
+            # Force kill if still running
+            if kill -0 "$pid" 2>/dev/null; then
+                echo -e "${YELLOW}Force killing $name...${NC}"
+                kill -9 "$pid" 2>/dev/null
+            fi
+
+            echo -e "${GREEN}✅ $name stopped${NC}"
+        else
+            echo -e "${YELLOW}⚠️  $name is not running${NC}"
+        fi
+        rm -f "$pid_file"
+    else
+        echo -e "${YELLOW}⚠️  No PID file for $name${NC}"
+    fi
+}
+
+# Stop all services
+stop_service "backend"
+stop_service "frontend"
+stop_service "frp"
+
+# Also try to stop by reading pids.txt (legacy)
+if [ -f "$PID_DIR/pids.txt" ]; then
+    read -ra PIDS < "$PID_DIR/pids.txt"
+    for pid in "${PIDS[@]}"; do
+        if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+            echo -e "${YELLOW}Stopping process (PID: $pid)...${NC}"
+            kill "$pid" 2>/dev/null || true
+        fi
+    done
+    rm -f "$PID_DIR/pids.txt"
+fi
+
+echo ""
+echo -e "${GREEN}✨ All services stopped${NC}"

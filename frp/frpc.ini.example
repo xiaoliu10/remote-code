@@ -1,0 +1,24 @@
+# Frp 客户端配置文件模板
+# 复制此文件为 frpc.ini 并填入你的服务器信息
+
+serverAddr = "your-server-ip"
+serverPort = 7000
+
+# 认证令牌（必须与服务器端一致）
+auth.token = "your-secure-token-here"
+
+# 前端服务 (Vite 开发服务器)
+[[proxies]]
+name = "remote-claude-frontend"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 5173
+remotePort = 5173
+
+# 后端 API + WebSocket 服务
+[[proxies]]
+name = "remote-claude-backend"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 9090
+remotePort = 9090

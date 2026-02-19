@@ -1,0 +1,22 @@
+# Frp 服务器端配置文件模板
+# 请在云服务器上使用此配置
+
+# Frp 服务端口
+bindPort = 7000
+
+# HTTP 虚拟主机端口（可选）
+vhostHTTPPort = 80
+
+# 认证令牌（重要！请修改为你自己的复杂密码）
+auth.token = "your-secure-token-here"
+
+# 仪表板配置（可选，用于监控）
+webServer.addr = "0.0.0.0"
+webServer.port = 7500
+webServer.user = "admin"
+webServer.password = "your-dashboard-password"
+
+# 日志配置
+log.to = "/var/log/frps.log"
+log.level = "info"
+log.maxDays = 3

@@ -1,0 +1,57 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Go
+*.test
+*.out
+go.work
+vendor/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# User configuration (contains personal settings)
+config.ini
+
+# FRP sensitive config (contains tokens)
+frp/frpc.ini
+frp/frps.toml
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build
+frontend/dist/
+backend/server
+
+# Temporary files
+*.tmp
+*.bak
+*.bak2
+
+# Local backup (contains personal config)
+.backup/

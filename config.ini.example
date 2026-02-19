@@ -1,0 +1,59 @@
+# Remote Claude Code Configuration
+# Copy this file to config.ini and modify as needed
+# 复制此文件为 config.ini 并根据需要修改
+
+# ==================== Backend Configuration ====================
+# 后端服务配置
+
+# Backend port (后端服务端口)
+BACKEND_PORT=9090
+
+# JWT secret - CHANGE IN PRODUCTION! (JWT 密钥，生产环境务必修改)
+JWT_SECRET=your-super-secret-jwt-key-here
+
+# Admin password (管理员密码)
+ADMIN_PASSWORD=admin123
+
+# Allowed working directory for sessions (会话允许的工作目录)
+ALLOWED_DIR=/home/yourusername/projects
+
+# Rate limiting (速率限制)
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_RPS=10
+RATE_LIMIT_BURST=20
+
+# ==================== Frontend Configuration ====================
+# 前端服务配置
+
+# Frontend dev server port (前端开发服务器端口)
+FRONTEND_PORT=5173
+
+# ==================== FRP Configuration ====================
+# FRP 内网穿透配置
+
+# Enable FRP tunnel (是否启用 FRP 内网穿透)
+FRP_ENABLED=false
+
+# FRP server address (FRP 服务器地址)
+FRP_SERVER_ADDR=your-server-ip
+
+# FRP server port (FRP 服务器端口)
+FRP_SERVER_PORT=7000
+
+# FRP authentication token (FRP 认证令牌，需与服务器一致)
+FRP_TOKEN=your-secure-token-here
+
+# ==================== Tailscale Configuration ====================
+# Tailscale 配置 (只需安装并登录，无需额外配置)
+
+# Enable Tailscale (是否使用 Tailscale)
+TAILSCALE_ENABLED=false
+
+# ==================== Advanced Settings ====================
+# 高级设置
+
+# Log directory (日志目录)
+LOG_DIR=./logs
+
+# PID file directory (PID 文件目录)
+PID_DIR=./logs
