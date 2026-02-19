@@ -126,9 +126,10 @@
           </div>
         </div>
 
-        <!-- Bottom Row: ESC Key -->
+        <!-- Bottom Row: ESC and Enter Keys -->
         <div class="keyboard-row bottom-row">
           <button class="key-btn" @click="handleSpecialKey('escape')">ESC</button>
+          <button class="key-btn primary" @click="handleSpecialKey('enter')">Enter</button>
         </div>
       </div>
 
@@ -190,6 +191,7 @@
           :disabled="!connected"
           @keydown="handleKeyDown"
           @update:value="handleInputChange"
+          @blur="handleInputBlur"
         >
           <template #prefix>
             <n-icon><TerminalIcon /></n-icon>
@@ -592,6 +594,36 @@ function initTerminal() {
   })
   resizeObserver.observe(terminalContainer.value)
 
+  // Handle mobile keyboard show/hide - refit terminal when keyboard closes
+  const handleViewportResize = () => {
+    // Delay to allow DOM to settle after keyboard animation
+    setTimeout(() => {
+      fitAddon?.fit()
+    }, 100)
+  }
+
+  // Use visualViewport API for better mobile keyboard handling
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleViewportResize)
+  }
+
+  // Also handle window resize as fallback
+  window.addEventListener('resize', handleViewportResize)
+
+  // Store cleanup function
+  const cleanupViewportListeners = () => {
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', handleViewportResize)
+    }
+    window.removeEventListener('resize', handleViewportResize)
+    resizeObserver.disconnect()
+  }
+
+  // Attach to terminal instance for cleanup
+  if (terminal) {
+    (terminal as any)._cleanupViewportListeners = cleanupViewportListeners
+  }
+
   // Note: terminal.onData is disabled - we use command input instead
   // If you want direct terminal input, uncomment the following:
   // terminal.onData((data) => {
@@ -686,6 +718,16 @@ function handleInputChange(value: string) {
     }
   }
   showFilePopover.value = false
+}
+
+/**
+ * Handle input blur - refit terminal when mobile keyboard closes
+ */
+function handleInputBlur() {
+  // Delay to allow keyboard close animation to complete
+  setTimeout(() => {
+    fitAddon?.fit()
+  }, 300)
 }
 
 /**
@@ -822,6 +864,10 @@ function handleReconnect() {
  */
 function cleanup() {
   if (terminal) {
+    // Cleanup viewport listeners
+    if ((terminal as any)._cleanupViewportListeners) {
+      ;(terminal as any)._cleanupViewportListeners()
+    }
     terminal.dispose()
     terminal = null
   }
@@ -1023,6 +1069,16 @@ onUnmounted(() => {
 .key-btn.danger:hover {
   background: rgba(241, 76, 76, 0.15);
   border-color: rgba(241, 76, 76, 0.5);
+}
+
+.key-btn.primary {
+  color: #4A9CFF;
+  border-color: rgba(74, 156, 255, 0.3);
+}
+
+.key-btn.primary:hover {
+  background: rgba(74, 156, 255, 0.15);
+  border-color: rgba(74, 156, 255, 0.5);
 }
 
 .connection-overlay,

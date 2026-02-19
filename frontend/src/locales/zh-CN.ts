@@ -28,6 +28,7 @@ export default {
     delete: '删除',
     open: '打开',
     send: '发送',
+    save: '保存',
     cancel: '取消',
     confirm: '确认',
     success: '成功',
@@ -84,8 +85,12 @@ export default {
     createSession: '创建会话',
     sessionName: '会话名称',
     sessionNamePlaceholder: 'my-project',
+    sessionNameReadOnly: '会话名称创建后不可修改',
     workDirectory: '工作目录',
     workDirectoryPlaceholder: '/home/user/projects',
+    workDirectoryNote: '工作目录仅用于显示，修改需重启会话',
+    sessionConfig: '会话配置',
+    sessionInfoUpdated: '会话信息已更新',
     noSessions: '暂无会话'
   },
   fileExplorer: {

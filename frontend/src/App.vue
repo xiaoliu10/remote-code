@@ -120,6 +120,11 @@ const themeOverrides: GlobalThemeOverrides = {
   box-sizing: border-box;
 }
 
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
     'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
@@ -127,11 +132,26 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background: #2B2B2B;
   color: #A9B7C6;
+  /* Prevent iOS bounce scrolling */
+  position: fixed;
+  width: 100%;
+  overscroll-behavior: none;
 }
 
 #app {
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
   background: #2B2B2B;
+  overflow: auto;
+  /* Use dvh for better mobile keyboard handling */
+  height: 100dvh;
+}
+
+/* Mobile keyboard handling */
+@media (max-width: 768px) {
+  body {
+    /* Prevent zoom on input focus on iOS */
+    -webkit-text-size-adjust: 100%;
+  }
 }
 </style>

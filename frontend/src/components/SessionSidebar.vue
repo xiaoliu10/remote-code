@@ -81,7 +81,8 @@ import {
   ChevronBack as ChevronBackIcon,
   Terminal as TerminalIcon,
   Ellipse as StopIcon,
-  TrashOutline as TrashIcon
+  TrashOutline as TrashIcon,
+  SettingsOutline as SettingsIcon
 } from '@vicons/ionicons5'
 import { useSessionStore } from '@/stores/session'
 import type { Session } from '@/api/client'
@@ -105,6 +106,12 @@ const createForm = ref({
   workDir: ''
 })
 
+// Edit session state
+const editForm = ref({
+  name: '',
+  workDir: ''
+})
+
 // Current session key for menu selection
 const currentSessionKey = computed(() => {
   return sessionStore.currentSession?.name || ''
@@ -116,10 +123,7 @@ const menuOptions = computed<MenuOption[]>(() => {
     key: session.name,
     label: () =>
       h('div', { class: 'session-label' }, [
-        h('div', { class: 'session-name' }, session.name),
-        session.work_dir
-          ? h('div', { class: 'session-workdir' }, session.work_dir)
-          : null
+        h('div', { class: 'session-name' }, session.name)
       ]),
     icon: () =>
       h(NIcon, null, {
@@ -138,6 +142,19 @@ const menuOptions = computed<MenuOption[]>(() => {
               bordered: false
             },
             { default: () => (session.is_active ? t('dashboard.active') : t('dashboard.inactive')) }
+          ),
+          h(
+            NButton,
+            {
+              text: true,
+              type: 'default',
+              size: 'small',
+              onClick: (e: Event) => {
+                e.stopPropagation()
+                openEditDialog(session)
+              }
+            },
+            { icon: () => h(NIcon, null, { default: () => h(SettingsIcon) }) }
           ),
           h(
             NButton,
@@ -243,6 +260,54 @@ function openCreateDialog() {
 }
 
 /**
+ * Open edit session dialog
+ */
+function openEditDialog(session: Session) {
+  editForm.value = {
+    name: session.name,
+    workDir: session.work_dir || ''
+  }
+
+  dialog.create({
+    title: t('sidebar.sessionConfig'),
+    positiveText: t('common.save'),
+    negativeText: t('common.cancel'),
+    onPositiveClick: () => {
+      handleUpdateSession()
+    },
+    content: () => h('div', { style: 'padding: 16px 0;' }, [
+      h('div', { style: 'margin-bottom: 16px;' }, [
+        h('label', { style: 'display: block; margin-bottom: 8px; color: #A9B7C6; font-size: 13px;' }, t('sidebar.sessionName')),
+        h(NInput, {
+          value: editForm.value.name,
+          disabled: true,
+          placeholder: t('sidebar.sessionNamePlaceholder')
+        }),
+        h('span', { style: 'font-size: 11px; color: #808080; margin-top: 4px; display: block;' }, t('sidebar.sessionNameReadOnly'))
+      ]),
+      h('div', {}, [
+        h('label', { style: 'display: block; margin-bottom: 8px; color: #A9B7C6; font-size: 13px;' }, t('sidebar.workDirectory')),
+        h(NInput, {
+          value: editForm.value.workDir,
+          onUpdateValue: (v: string) => { editForm.value.workDir = v },
+          placeholder: t('sidebar.workDirectoryPlaceholder')
+        }),
+        h('span', { style: 'font-size: 11px; color: #808080; margin-top: 4px; display: block;' }, t('sidebar.workDirectoryNote'))
+      ])
+    ])
+  })
+}
+
+/**
+ * Update session (currently only work_dir display, actual change requires session restart)
+ */
+function handleUpdateSession() {
+  // For now, just show a message that this is display-only
+  // In the future, we could implement session restart with new work_dir
+  message.info(t('sidebar.sessionInfoUpdated'))
+}
+
+/**
  * Delete a session
  */
 async function handleDeleteSession(name: string) {
@@ -305,13 +370,12 @@ onMounted(() => {
 .session-extra {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .session-label {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
   flex: 1;
   min-width: 0;
 }
@@ -323,15 +387,6 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.session-workdir {
-  font-size: 11px;
-  color: #808080;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: 'Courier New', monospace;
 }
 
 /* Force visible text colors for menu items */

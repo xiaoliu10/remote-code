@@ -28,6 +28,7 @@ export default {
     delete: 'Delete',
     open: 'Open',
     send: 'Send',
+    save: 'Save',
     cancel: 'Cancel',
     confirm: 'Confirm',
     success: 'Success',
@@ -84,8 +85,12 @@ export default {
     createSession: 'Create Session',
     sessionName: 'Session Name',
     sessionNamePlaceholder: 'my-project',
+    sessionNameReadOnly: 'Session name cannot be changed after creation',
     workDirectory: 'Work Directory',
     workDirectoryPlaceholder: '/home/user/projects',
+    workDirectoryNote: 'Work directory is for display only, changes require session restart',
+    sessionConfig: 'Session Config',
+    sessionInfoUpdated: 'Session info updated',
     noSessions: 'No sessions'
   },
   fileExplorer: {

@@ -94,7 +94,19 @@ FRP_TOKEN=your-token
 
 ## Remote Access
 
+### Why Do You Need Tunneling?
+
+Remote Claude Code runs on your local network by default and is only accessible within the LAN. When you need to **access your home Claude Code sessions remotely from outside (office, cafe, mobile network)**, you need a tunneling solution.
+
+**Use Cases:**
+- Running Claude Code on home PC, need remote control when away
+- Office network blocks external ports
+- No public IP or ISP blocks ports
+- Need stable remote access experience
+
 ### Option 1: FRP + Nginx HTTPS (Recommended)
+
+FRP (Fast Reverse Proxy) is a high-performance tunneling tool that exposes local services through a public server.
 
 #### 1. Configure FRP
 
