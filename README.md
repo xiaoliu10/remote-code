@@ -186,6 +186,31 @@ docker-compose --profile cloudflare up -d
 - Ctrl+C（中断）
 - Ctrl+D（退出）
 - @ 符号（文件引用）
+- 🎤 语音输入（需要 HTTPS 或特殊配置）
+
+### 5. 语音输入
+
+移动端支持语音输入功能，点击麦克风按钮即可语音输入命令。
+
+⚠️ **重要**: 由于浏览器安全限制，语音输入功能需要满足以下条件之一：
+
+#### 方式一：使用 HTTPS（推荐）
+
+通过 HTTPS 访问时，语音功能可直接使用：
+- 使用 Cloudflare Tunnel（自带 HTTPS）
+- 配置 Nginx + Let's Encrypt 证书
+- 使用 Tailscale（安全连接）
+
+#### 方式二：Chrome 开发者标志（仅测试用）
+
+如果必须使用 HTTP 访问，可以在 Chrome 中设置：
+1. 访问 `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
+2. 添加你的访问地址（如 `http://your-server:5173`）
+3. 启用该选项并重启 Chrome
+
+#### 方式三：本地测试
+
+本地访问 `http://localhost:5173` 时语音功能可直接使用，无需额外配置。
 
 ### 5. 文件浏览
 

@@ -142,8 +142,33 @@ Mobile virtual keyboard includes:
 - Ctrl+C (interrupt)
 - Ctrl+D (exit)
 - @ symbol (file reference)
+- 🎤 Voice input (requires HTTPS or special configuration)
 
-### 5. File Browser
+### 5. Voice Input
+
+Mobile supports voice input. Click the microphone button to speak commands.
+
+⚠️ **Important**: Due to browser security restrictions, voice input requires one of the following:
+
+#### Option 1: Use HTTPS (Recommended)
+
+Voice input works directly when accessed via HTTPS:
+- Use Cloudflare Tunnel (includes HTTPS)
+- Configure Nginx + Let's Encrypt certificate
+- Use Tailscale (secure connection)
+
+#### Option 2: Chrome Developer Flag (Testing Only)
+
+If you must use HTTP, you can enable it in Chrome:
+1. Go to `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
+2. Add your access URL (e.g., `http://your-server:5173`)
+3. Enable the option and restart Chrome
+
+#### Option 3: Local Testing
+
+Voice input works directly when accessing `http://localhost:5173` locally, no extra configuration needed.
+
+### 6. File Browser
 
 Click the file icon in the sidebar to browse files in the working directory.
 
