@@ -15,6 +15,10 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# Config directory (user's home)
+CONFIG_DIR="$HOME/.remote-claude-code"
+CONFIG_FILE="$CONFIG_DIR/config.ini"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -44,7 +48,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --frp         Enable FRP even if disabled in config"
             echo "  --help, -h    Show this help message"
             echo ""
-            echo "First time? Copy config.ini.example to config.ini"
+            echo "Config location: $CONFIG_FILE"
             exit 0
             ;;
         *)
@@ -91,21 +95,95 @@ check_dependencies() {
 
 check_dependencies
 
-# Load configuration
-load_config() {
-    local config_file="$SCRIPT_DIR/config.ini"
+# Initialize config directory
+init_config() {
+    if [ ! -d "$CONFIG_DIR" ]; then
+        echo -e "${YELLOW}📁 Creating config directory: $CONFIG_DIR${NC}"
+        mkdir -p "$CONFIG_DIR"
+    fi
 
-    if [ ! -f "$config_file" ]; then
-        echo -e "${YELLOW}⚠️  config.ini not found, creating from template...${NC}"
-        cp "$SCRIPT_DIR/config.ini.example" "$config_file"
-        echo -e "${GREEN}✅ Created config.ini${NC}"
-        echo -e "${YELLOW}   Please edit config.ini with your settings${NC}"
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo -e "${YELLOW}📝 Creating default config: $CONFIG_FILE${NC}"
+
+        # Get default values
+        local home_dir="$HOME"
+        local allowed_dir="$home_dir/projects"
+
+        # Generate random password and JWT secret
+        local admin_password=$(openssl rand -base64 12 | tr -d '/+=' | head -c 16)
+        local jwt_secret=$(openssl rand -base64 32 | tr -d '/+=' | head -c 32)
+
+        cat > "$CONFIG_FILE" << EOF
+# Remote Claude Code Configuration
+# 配置文件路径: $CONFIG_FILE
+#
+# 修改此文件后重启服务生效
+
+# ==================== Backend Configuration ====================
+# 后端服务配置
+
+# Backend port (后端服务端口)
+BACKEND_PORT=9090
+
+# JWT secret (JWT 密钥)
+JWT_SECRET=$jwt_secret
+
+# Admin password (管理员密码)
+ADMIN_PASSWORD=$admin_password
+
+# Allowed working directory (会话允许的工作目录)
+ALLOWED_DIR=$allowed_dir
+
+# Rate limiting (速率限制)
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_RPS=10
+RATE_LIMIT_BURST=20
+
+# ==================== Frontend Configuration ====================
+# 前端服务配置
+
+# Frontend dev server port (前端开发服务器端口)
+FRONTEND_PORT=5173
+
+# ==================== FRP Configuration ====================
+# FRP 内网穿透配置
+
+# Enable FRP tunnel (是否启用 FRP 内网穿透)
+FRP_ENABLED=false
+
+# FRP server address (FRP 服务器地址)
+FRP_SERVER_ADDR=
+
+# FRP server port (FRP 服务器端口)
+FRP_SERVER_PORT=7000
+
+# FRP authentication token (FRP 认证令牌)
+FRP_TOKEN=
+
+# ==================== Advanced Settings ====================
+# 高级设置
+
+# Log directory (日志目录)
+LOG_DIR=$CONFIG_DIR/logs
+
+# PID file directory (PID 文件目录)
+PID_DIR=$CONFIG_DIR/logs
+EOF
+
+        echo -e "${GREEN}✅ Created config file with random password${NC}"
+        echo -e "${YELLOW}   Admin Password: $admin_password${NC}"
+        echo -e "${YELLOW}   Please save this password!${NC}"
         echo ""
     fi
+}
+
+# Load configuration
+load_config() {
+    init_config
 
     # Source the config file (export variables)
     set -a
-    source "$config_file"
+    source "$CONFIG_FILE"
     set +a
 
     # Apply command line override
@@ -116,8 +194,8 @@ load_config() {
     # Set defaults if not configured
     BACKEND_PORT=${BACKEND_PORT:-9090}
     FRONTEND_PORT=${FRONTEND_PORT:-5173}
-    LOG_DIR=${LOG_DIR:-./logs}
-    PID_DIR=${PID_DIR:-./logs}
+    LOG_DIR=${LOG_DIR:-$CONFIG_DIR/logs}
+    PID_DIR=${PID_DIR:-$CONFIG_DIR/logs}
 }
 
 load_config
@@ -166,16 +244,13 @@ EOF
 
 # Generate FRP config if enabled
 generate_frp_config() {
-    local frp_config="$SCRIPT_DIR/frp/frpc.ini"
+    local frp_config="$CONFIG_DIR/frpc.ini"
 
     if [ "$FRP_ENABLED" = "true" ]; then
-        # Check if frpc.ini already has valid config (not placeholder)
-        if [ -f "$frp_config" ] && grep -q "your-server-ip" "$frp_config" 2>/dev/null; then
-            # Has placeholder, regenerate
-            :
-        elif [ -f "$frp_config" ] && [ -n "$(grep -E '^serverAddr = "[0-9]+\.' "$frp_config" 2>/dev/null)" ]; then
+        # Check if frpc.ini already has valid config
+        if [ -f "$frp_config" ] && [ -n "$(grep -E '^serverAddr = "[0-9]+\.' "$frp_config" 2>/dev/null)" ]; then
             # Has valid IP address config, don't overwrite
-            echo -e "${GREEN}✅ Using existing frp/frpc.ini${NC}"
+            echo -e "${GREEN}✅ Using existing $frp_config${NC}"
             return
         fi
 
@@ -203,7 +278,7 @@ localIP = "127.0.0.1"
 localPort = $BACKEND_PORT
 remotePort = $BACKEND_PORT
 EOF
-        echo -e "${GREEN}✅ Generated frp/frpc.ini${NC}"
+        echo -e "${GREEN}✅ Generated $frp_config${NC}"
     fi
 }
 
@@ -244,7 +319,7 @@ start_backend() {
         exit 1
     fi
 
-    go run cmd/server/main.go > "$SCRIPT_DIR/$LOG_DIR/backend.log" 2>&1 &
+    go run cmd/server/main.go > "$LOG_DIR/backend.log" 2>&1 &
     BACKEND_PID=$!
 
     cd "$SCRIPT_DIR"
@@ -264,7 +339,7 @@ start_frontend() {
         npm install --silent
     fi
 
-    npm run dev > "$SCRIPT_DIR/$LOG_DIR/frontend.log" 2>&1 &
+    npm run dev > "$LOG_DIR/frontend.log" 2>&1 &
     FRONTEND_PID=$!
 
     cd "$SCRIPT_DIR"
@@ -282,7 +357,9 @@ start_frp() {
 
     # Check for frpc binary
     local frpc_bin=""
-    if [ -f "$SCRIPT_DIR/frp/frpc" ]; then
+    if [ -f "$CONFIG_DIR/frpc" ]; then
+        frpc_bin="$CONFIG_DIR/frpc"
+    elif [ -f "$SCRIPT_DIR/frp/frpc" ]; then
         frpc_bin="$SCRIPT_DIR/frp/frpc"
     elif command -v frpc &> /dev/null; then
         frpc_bin="frpc"
@@ -303,14 +380,13 @@ start_frp() {
         local frp_url="https://github.com/fatedier/frp/releases/download/v${frp_version}/frp_${frp_version}_${os}_${arch}.tar.gz"
 
         echo -e "${YELLOW}   Downloading from: $frp_url${NC}"
-        mkdir -p "$SCRIPT_DIR/frp"
-        curl -sL "$frp_url" | tar xz -C "$SCRIPT_DIR/frp" --strip-components=1 "frp_${frp_version}_${os}_${arch}/frpc"
-        chmod +x "$SCRIPT_DIR/frp/frpc"
-        frpc_bin="$SCRIPT_DIR/frp/frpc"
-        echo -e "${GREEN}✅ Downloaded FRP client${NC}"
+        curl -sL "$frp_url" | tar xz -C "$CONFIG_DIR" --strip-components=1 "frp_${frp_version}_${os}_${arch}/frpc"
+        chmod +x "$CONFIG_DIR/frpc"
+        frpc_bin="$CONFIG_DIR/frpc"
+        echo -e "${GREEN}✅ Downloaded FRP client to $CONFIG_DIR${NC}"
     fi
 
-    "$frpc_bin" -c "$SCRIPT_DIR/frp/frpc.ini" > "$SCRIPT_DIR/$LOG_DIR/frp.log" 2>&1 &
+    "$frpc_bin" -c "$CONFIG_DIR/frpc.ini" > "$LOG_DIR/frp.log" 2>&1 &
     FRP_PID=$!
     echo "$FRP_PID" > "$PID_DIR/frp.pid"
     echo -e "${GREEN}✅ FRP client started (PID: $FRP_PID)${NC}"

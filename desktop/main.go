@@ -18,12 +18,13 @@ func main() {
 	// Create an instance of the app structure
 	app := NewApp()
 
-	// Get user config directory
-	configDir, err := os.UserConfigDir()
+	// Get user home directory for config
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err)
 	}
-	app.ConfigPath = filepath.Join(configDir, "remote-claude-code", "config.json")
+	app.ConfigDir = filepath.Join(homeDir, ".remote-claude-code")
+	app.ConfigPath = filepath.Join(app.ConfigDir, "config.json")
 
 	// Create application with options
 	err = wails.Run(&options.App{

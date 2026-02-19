@@ -18,6 +18,7 @@ import (
 // App application struct
 type App struct {
 	ctx        context.Context
+	ConfigDir  string
 	ConfigPath string
 	config     *Config
 	backendCmd *exec.Cmd
@@ -96,8 +97,15 @@ func (a *App) shutdown(ctx context.Context) {
 func (a *App) loadConfig() {
 	a.config = GetDefaultConfig()
 
+	// Create config directory if it doesn't exist
+	if err := os.MkdirAll(a.ConfigDir, 0755); err != nil {
+		logMessage("Failed to create config directory: " + err.Error())
+		return
+	}
+
 	data, err := os.ReadFile(a.ConfigPath)
 	if err != nil {
+		// Config file doesn't exist, will use defaults
 		return
 	}
 

@@ -7,6 +7,9 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# Config directory
+CONFIG_DIR="$HOME/.remote-claude-code"
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -20,10 +23,10 @@ echo "================================"
 echo -e "${NC}"
 
 # Load config for PID directory
-PID_DIR="./logs"
-if [ -f "config.ini" ]; then
-    source "config.ini"
-    PID_DIR=${PID_DIR:-./logs}
+PID_DIR="$CONFIG_DIR/logs"
+if [ -f "$CONFIG_DIR/config.ini" ]; then
+    source "$CONFIG_DIR/config.ini"
+    PID_DIR=${PID_DIR:-$CONFIG_DIR/logs}
 fi
 
 # Function to stop a service by PID file
