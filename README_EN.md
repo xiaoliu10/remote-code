@@ -6,18 +6,19 @@ A remote Claude Code management tool built with Go + Vue 3, allowing you to moni
 
 ## Features
 
-- 🔐 **Secure Authentication**: JWT Token authentication + bcrypt password encryption
-- 🎨 **Beautiful UI**: Glassmorphism login page, modern UI design
+- 🔐 **Secure Authentication**: JWT Token + bcrypt password encryption
+- 🎨 **Beautiful UI**: Glassmorphism login page, modern design
 - 🖥️ **Session Management**: Create, delete, and view Claude Code sessions
 - 📡 **Real-time Terminal**: WebSocket streaming for terminal output
-- ⌨️ **Remote Control**: Send commands to remote sessions with realtime mode and command mode
-- 📱 **Mobile Optimized**: Custom virtual keyboard with arrow keys, Tab, Ctrl+C shortcuts
-- 📂 **File Browser**: Built-in file explorer with file content viewing
-- 🔒 **File Reference**: Support @ symbol for file reference functionality
+- ⌨️ **Remote Control**: Send commands with realtime mode and command mode
+- 📱 **Mobile Optimized**: Custom virtual keyboard with arrow keys, Tab, Ctrl+C
+- 🎤 **Voice Input**: Voice input support (requires HTTPS)
+- 📂 **File Browser**: Built-in file explorer
+- 🔒 **File Reference**: @ symbol for file references
 - 🛡️ **Security**: Rate limiting, input validation, path whitelist
-- 🐳 **Docker Deployment**: One-click deployment, ready to use
-- 🌐 **Network Tunnel**: Integrated tunnel solutions (Frp, Tailscale, Cloudflare Tunnel)
-- 🌍 **i18n**: Chinese and English language support
+- 🐳 **Docker**: One-click deployment
+- 🌐 **Network Tunnel**: FRP, Tailscale, Cloudflare Tunnel
+- 🌍 **i18n**: Chinese and English support
 - 📜 **License**: Apache License 2.0
 
 ## Tech Stack
@@ -44,308 +45,267 @@ A remote Claude Code management tool built with Go + Vue 3, allowing you to moni
 - Go 1.21+
 - Node.js 20+
 - tmux
-- (Optional) Docker & Docker Compose
 
-### Option 1: One-Command Start (Recommended)
+### One-Command Start
 
 ```bash
 # 1. Clone the project
-git clone https://github.com/yourname/remote-claude-code.git
+git clone https://github.com/xiaoliu10/remote-claude-code.git
 cd remote-claude-code
 
-# 2. Create config file
-cp config.ini.example config.ini
-
-# 3. Edit config (optional, defaults work for quick start)
-# vim config.ini
-
-# 4. Start all services
+# 2. Start services (auto-creates config on first run)
 ./start.sh
 
 # Visit http://localhost:5173
 ```
 
-The startup script automatically:
-- Checks dependencies (tmux, go, node)
-- Generates `.env` files for backend and frontend
-- Starts backend service (default port 9090)
-- Starts frontend service (default port 5173)
-- Starts FRP tunnel if configured
+On first run, the system will automatically:
+- Create config directory at `~/.remote-claude-code/`
+- Generate random admin password (save it!)
+- Start backend service (port 9090)
+- Start frontend service (port 5173)
 
-**Management Commands:**
+### Management Commands
+
 ```bash
 ./start.sh          # Start services
-./start.sh --no-frp # Start services (disable FRP)
-./start.sh --frp    # Start services (force enable FRP)
+./start.sh --frp    # Start with FRP enabled
+./start.sh --no-frp # Start without FRP
 ./stop.sh           # Stop services
 ```
 
-### Option 2: Docker Compose
+### Configuration
 
-```bash
-# Configure environment
-cp config.ini.example config.ini
-
-# Start services
-docker-compose up -d
-
-# Visit http://localhost
-```
-
-### Option 3: Enable Network Tunnel
-
-Edit `config.ini` and set:
+Config file located at `~/.remote-claude-code/config.ini`:
 
 ```ini
-# Enable FRP
+# Backend config
+BACKEND_PORT=9090
+JWT_SECRET=auto-generated
+ADMIN_PASSWORD=auto-generated
+ALLOWED_DIR=/home/user/projects
+
+# FRP config
+FRP_ENABLED=false
+FRP_SERVER_ADDR=your-server-ip
+FRP_SERVER_PORT=7000
+FRP_TOKEN=your-token
+```
+
+## Remote Access
+
+### Option 1: FRP + Nginx HTTPS (Recommended)
+
+#### 1. Configure FRP
+
+Edit `~/.remote-claude-code/config.ini`:
+
+```ini
 FRP_ENABLED=true
 FRP_SERVER_ADDR=your-server-ip
 FRP_SERVER_PORT=7000
-FRP_TOKEN=your-secure-token
+FRP_TOKEN=your-token
 ```
 
-Then run `./start.sh`. The system will automatically:
-- Download FRP client (if not installed)
-- Generate FRP configuration
-- Start network tunnel
+#### 2. Configure Nginx on Server
 
-For detailed tunnel configuration: [docs/NETWORK_TUNNEL_GUIDE.md](./docs/NETWORK_TUNNEL_GUIDE.md)
+Create Nginx config on your server:
+
+```nginx
+server {
+    listen 8444 ssl http2;
+    server_name your-domain.com;
+
+    ssl_certificate /path/to/fullchain.pem;
+    ssl_certificate_key /path/to/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # WebSocket
+    location /api/ws {
+        proxy_pass http://127.0.0.1:9090;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400s;
+    }
+
+    # Backend API
+    location /api {
+        proxy_pass http://127.0.0.1:9090;
+        proxy_set_header Host $host;
+    }
+
+    # Frontend
+    location / {
+        proxy_pass http://127.0.0.1:5173;
+        proxy_set_header Host $host;
+    }
+}
+```
+
+#### 3. Start Services
+
+```bash
+./start.sh --frp
+```
+
+#### 4. Access
+
+```
+https://your-domain.com:8444
+```
+
+### Option 2: Tailscale
+
+```bash
+# Install and login to Tailscale
+brew install tailscale
+sudo tailscale up
+
+# Start services
+./start.sh
+
+# Visit http://<tailscale-ip>:5173
+```
+
+### Option 3: Cloudflare Tunnel
+
+```bash
+export CLOUDFLARE_TUNNEL_TOKEN=your-token
+docker-compose --profile cloudflare up -d
+```
 
 ## Usage
 
 ### 1. Login
 
-Default admin account:
-- Username: `admin`
-- Password: `admin123` (please change in production)
+Random password is generated on first run. Check startup output for the password.
 
 ### 2. Create Session
 
-On the Dashboard page:
 1. Enter session name (e.g., `my-project`)
 2. Select working directory (optional)
-3. Click "Create" to create session
+3. Click "Create"
 
-### 3. Open Terminal
+### 3. Terminal
 
-Click the "Open" button in the session list to open the real-time terminal.
-
-### 4. Send Commands
-
-Terminal supports two input modes:
+Two input modes:
 - **Realtime Mode**: Each character sent immediately, supports autocomplete
 - **Command Mode**: Press Enter to send complete command
 
-Mobile virtual keyboard includes:
+Mobile virtual keyboard:
 - Arrow keys (up/down/left/right)
-- Tab key
-- Ctrl+C (interrupt)
-- Ctrl+D (exit)
+- Tab, Ctrl+C, Ctrl+D
 - @ symbol (file reference)
-- 🎤 Voice input (requires HTTPS or special configuration)
+- 🎤 Voice input
 
-### 5. Voice Input
+### 4. Voice Input
 
-Mobile supports voice input. Click the microphone button to speak commands.
+⚠️ **Voice input requires HTTPS**
 
-⚠️ **Important**: Due to browser security restrictions, voice input requires one of the following:
+Voice input has browser security restrictions:
 
-#### Option 1: Use HTTPS (Recommended)
+| Method | Description |
+|--------|-------------|
+| HTTPS | Use Nginx + Let's Encrypt |
+| localhost | No config needed for local access |
+| Chrome flag | Testing only, visit `chrome://flags/#unsafely-treat-insecure-origin-as-secure` |
 
-Voice input works directly when accessed via HTTPS:
-- Use Cloudflare Tunnel (includes HTTPS)
-- Configure Nginx + Let's Encrypt certificate
-- Use Tailscale (secure connection)
+### 5. File Browser
 
-#### Option 2: Chrome Developer Flag (Testing Only)
+Click the file icon in sidebar to browse files.
 
-If you must use HTTP, you can enable it in Chrome:
-1. Go to `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
-2. Add your access URL (e.g., `http://your-server:5173`)
-3. Enable the option and restart Chrome
+## Directory Structure
 
-#### Option 3: Local Testing
+```
+~/.remote-claude-code/          # Config directory
+├── config.ini                  # Main config
+├── frpc.ini                    # FRP config (auto-generated)
+├── frpc                        # FRP client (auto-downloaded)
+└── logs/                       # Logs
+    ├── backend.log
+    ├── frontend.log
+    └── frp.log
 
-Voice input works directly when accessing `http://localhost:5173` locally, no extra configuration needed.
-
-### 6. File Browser
-
-Click the file icon in the sidebar to browse files in the working directory.
-
-## Port Configuration
-
-Default ports used by the project:
-
-| Service | Default Port | Environment Variable |
-|---------|--------------|---------------------|
-| Backend API | 9090 | `PORT` |
-| Frontend Dev Server | 5173 | - |
-| Docker Frontend | 80 | - |
-
-To change the backend port, set `PORT` in `backend/.env` and `VITE_BACKEND_PORT` in `frontend/.env`.
+remote-claude-code/             # Source directory
+├── backend/                    # Go backend
+├── frontend/                   # Vue frontend
+├── desktop/                    # Desktop app
+├── nginx/                      # Nginx config
+├── docs/                       # Documentation
+├── start.sh                    # Start script
+└── stop.sh                     # Stop script
+```
 
 ## API Documentation
 
 ### Authentication
 
 ```bash
-# Login
 POST /api/auth/login
-{
-  "username": "admin",
-  "password": "admin123"
-}
+{"username": "admin", "password": "your-password"}
 ```
 
 ### Session Management
 
 ```bash
-# List all sessions
-GET /api/sessions
-
-# Create session
-POST /api/sessions
-{
-  "name": "my-project",
-  "work_dir": "/home/user/projects"
-}
-
-# Get session details
-GET /api/sessions/{name}
-
-# Delete session
-DELETE /api/sessions/{name}
-
-# Send command
-POST /api/sessions/{name}/command
-{
-  "command": "ls -la"
-}
-
-# Get output
-GET /api/sessions/{name}/output
+GET    /api/sessions              # List sessions
+POST   /api/sessions              # Create session
+GET    /api/sessions/{name}       # Get details
+DELETE /api/sessions/{name}       # Delete session
+POST   /api/sessions/{name}/command  # Send command
 ```
 
 ### File Operations
 
 ```bash
-# List directory contents
-GET /api/files?path=/home/user/projects
-
-# Get file content
-GET /api/files/content?path=/home/user/projects/file.txt
-
-# Create file/directory
-POST /api/files
-{
-  "path": "/home/user/projects/newfile.txt",
-  "type": "file",
-  "content": "Hello World"
-}
-
-# Rename
-PUT /api/files/rename
-{
-  "oldPath": "/home/user/projects/old.txt",
-  "newPath": "/home/user/projects/new.txt"
-}
-
-# Delete
-DELETE /api/files?path=/home/user/projects/file.txt
+GET    /api/files?path=/path     # List directory
+GET    /api/files/content?path=/path  # Get content
+POST   /api/files                # Create file/folder
+PUT    /api/files/rename         # Rename
+DELETE /api/files?path=/path     # Delete
 ```
 
 ### WebSocket
 
 ```javascript
-// Connect to session
-const ws = new WebSocket('ws://localhost:9090/ws/session-name?token=YOUR_JWT_TOKEN')
+const ws = new WebSocket('wss://your-domain:8444/api/ws/session?token=TOKEN')
 
 // Send command
-ws.send(JSON.stringify({
-  type: 'command',
-  data: 'your-command'
-}))
+ws.send(JSON.stringify({type: 'command', data: 'ls -la'}))
 
-// Send keys (realtime mode)
-ws.send(JSON.stringify({
-  type: 'keys',
-  data: 'ls'
-}))
-
-// Receive output
-ws.onmessage = (event) => {
-  const message = JSON.parse(event.data)
-  if (message.type === 'output') {
-    console.log(message.data.text)
-  }
-}
-```
-
-## Security Recommendations
-
-1. **Change Default Password**: Modify admin password before first use (`ADMIN_PASSWORD` in `backend/.env`)
-2. **Use Strong JWT Secret**: Generate a random string for `JWT_SECRET`
-3. **Configure HTTPS**: Use HTTPS in production environments
-4. **Restrict Access**: Use firewall or VPN to limit access
-5. **Regular Updates**: Keep dependencies up to date
-
-## Directory Structure
-
-```
-remote-claude-code/
-├── backend/              # Go backend
-│   ├── cmd/
-│   │   └── server/       # Entry point
-│   ├── internal/         # Internal packages
-│   │   ├── api/          # API handlers
-│   │   ├── auth/         # Authentication
-│   │   ├── config/       # Configuration
-│   │   ├── security/     # Security
-│   │   ├── tmux/         # tmux management
-│   │   └── websocket/    # WebSocket
-│   └── Dockerfile
-├── frontend/             # Vue frontend
-│   ├── src/
-│   │   ├── api/          # API client
-│   │   ├── components/   # Components
-│   │   ├── composables/  # Composables
-│   │   ├── router/       # Router
-│   │   ├── stores/       # State management
-│   │   └── views/        # Pages
-│   ├── Dockerfile
-│   └── nginx.conf
-├── frp/                  # FRP tunnel configuration
-├── docker-compose.yml
-└── README.md
+// Send keys
+ws.send(JSON.stringify({type: 'keys', data: 'ls'}))
 ```
 
 ## Troubleshooting
 
-### tmux Not Available
+### Port in Use
+
 ```bash
-# macOS
-brew install tmux
-
-# Ubuntu/Debian
-sudo apt-get install tmux
-
-# CentOS/RHEL
-sudo yum install tmux
+./stop.sh  # Stops all services including orphan processes
 ```
 
 ### WebSocket Connection Failed
-- Check if JWT Token is valid
-- Confirm session name is correct
+
+- Check Nginx `/api/ws` configuration
+- Verify HTTPS certificate is valid
 - Check browser console for errors
-- Check if port is occupied or firewall settings
 
-### Empty Session Output
-- Confirm session has started claude-code
-- Check tmux session status: `tmux list-sessions`
+### Voice Input Not Working
 
-### Login Failed via Domain
-- Ensure Vite config `allowedHosts` includes your domain
-- Check if backend API responds correctly
+- Ensure HTTPS access
+- Or use localhost for testing
+- Check browser Web Speech API support
+
+## Security Recommendations
+
+1. **Save Initial Password**: Save the randomly generated password on first run
+2. **Use HTTPS**: Always use HTTPS in production
+3. **Regular Updates**: Keep dependencies up to date
+4. **Restrict Access**: Use firewall to limit access
 
 ## License
 
