@@ -80,5 +80,37 @@ if [ -f "$PID_DIR/pids.txt" ]; then
     rm -f "$PID_DIR/pids.txt"
 fi
 
+# Kill orphan processes (from old config location or crashed)
+echo ""
+echo -e "${YELLOW}🔍 Checking for orphan processes...${NC}"
+
+# Kill vite processes for this project
+vite_pids=$(pgrep -f "vite.*$SCRIPT_DIR" 2>/dev/null)
+if [ -n "$vite_pids" ]; then
+    echo -e "${YELLOW}   Killing orphan vite processes: $vite_pids${NC}"
+    echo "$vite_pids" | xargs kill 2>/dev/null || true
+fi
+
+# Kill go run processes for this project
+go_pids=$(pgrep -f "go run.*$SCRIPT_DIR/backend" 2>/dev/null)
+if [ -n "$go_pids" ]; then
+    echo -e "${YELLOW}   Killing orphan go processes: $go_pids${NC}"
+    echo "$go_pids" | xargs kill 2>/dev/null || true
+fi
+
+# Kill frpc processes for this project
+frpc_pids=$(pgrep -f "frpc.*$SCRIPT_DIR" 2>/dev/null)
+if [ -n "$frpc_pids" ]; then
+    echo -e "${YELLOW}   Killing orphan frpc processes: $frpc_pids${NC}"
+    echo "$frpc_pids" | xargs kill 2>/dev/null || true
+fi
+
+# Also check for frpc using config dir
+frpc_pids2=$(pgrep -f "frpc.*$CONFIG_DIR" 2>/dev/null)
+if [ -n "$frpc_pids2" ]; then
+    echo -e "${YELLOW}   Killing orphan frpc processes: $frpc_pids2${NC}"
+    echo "$frpc_pids2" | xargs kill 2>/dev/null || true
+fi
+
 echo ""
 echo -e "${GREEN}✨ All services stopped${NC}"
