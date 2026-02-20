@@ -2,21 +2,21 @@
 
 [English](./README_EN.md) | 简体中文
 
-基于 Go + Vue 3 的远程 Claude Code 管理工具，可以远程监控和控制家中的 Claude Code 会话。
+基于 Go + Vue 3 的远程终端管理工具，可以远程监控和控制 CLI 编程工具（如 Claude Code、Cursor、Aider 等）。
 
 ## 功能特性
 
 - 🔐 **安全认证**: JWT Token 认证 + bcrypt 密码加密
 - 🎨 **精美界面**: 玻璃拟态风格登录页，现代化 UI 设计
-- 🖥️ **会话管理**: 创建、删除、查看 Claude Code 会话
+- 🖥️ **会话管理**: 创建、删除、查看终端会话
 - 📡 **实时终端**: WebSocket 实时流式传输终端输出
 - ⌨️ **远程控制**: 发送命令到远程会话，支持实时模式和命令模式
-- 📱 **移动端优化**: 自定义虚拟键盘，包含方向键、Tab、Ctrl+C 等快捷键
+- 📱 **移动端优化**: 自定义虚拟键盘，包含方向键、Tab、Ctrl+C、Enter 等快捷键
 - 🎤 **语音输入**: 支持语音输入命令（需要 HTTPS）
 - 📂 **文件浏览**: 内置文件浏览器，支持浏览、查看文件内容
 - 🔒 **文件引用**: 支持 @ 符号触发文件引用功能
 - 🛡️ **安全防护**: 速率限制、输入验证、路径白名单
-- 🐳 **Docker 部署**: 一键部署，开箱即用
+- 📦 **跨平台编译**: 支持编译为独立可执行文件，无需 Go 环境
 - 🌐 **内网穿透**: 集成多种内网穿透方案（Frp、Tailscale、Cloudflare Tunnel）
 - 🌍 **国际化**: 支持中英文切换
 - 📜 **开源协议**: Apache License 2.0
@@ -42,11 +42,11 @@
 
 ### 前置要求
 
-- Go 1.21+
-- Node.js 20+
+- Go 1.21+（仅源码运行需要，使用编译版本不需要）
+- Node.js 20+（前端开发需要）
 - tmux
 
-### 一键启动
+### 方式一：源码运行
 
 ```bash
 # 1. 克隆项目
@@ -59,6 +59,32 @@ cd remote-code
 # 访问 http://localhost:5173
 ```
 
+### 方式二：编译后运行（推荐生产环境）
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/xiaoliu10/remote-code.git
+cd remote-code
+
+# 2. 编译后端（生成多平台可执行文件）
+./build.sh
+
+# 3. 启动服务（会自动使用编译好的二进制）
+./start.sh --frp
+
+# 访问 http://localhost:5173
+```
+
+**编译输出：**
+
+| 平台 | 文件名 | 架构 |
+|------|--------|------|
+| macOS Intel | `remote-code-macos-intel` | x86_64 |
+| macOS Apple Silicon | `remote-code-macos-apple` | arm64 |
+| Linux x64 | `remote-code-linux-x64` | x86_64 |
+| Linux ARM64 | `remote-code-linux-arm64` | arm64 |
+| Windows x64 | `remote-code-windows-x64.exe` | x86_64 |
+
 首次启动时，系统会自动：
 - 在 `~/.remote-code/` 创建配置目录
 - 生成随机管理员密码（请保存！）
@@ -68,6 +94,7 @@ cd remote-code
 ### 管理命令
 
 ```bash
+./build.sh          # 编译多平台可执行文件
 ./start.sh          # 启动服务
 ./start.sh --frp    # 启动服务并启用 FRP
 ./start.sh --no-frp # 启动服务（禁用 FRP）

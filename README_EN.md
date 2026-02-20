@@ -2,21 +2,21 @@
 
 English | [简体中文](./README.md)
 
-A remote Claude Code management tool built with Go + Vue 3, allowing you to monitor and control Claude Code sessions remotely.
+A remote terminal management tool built with Go + Vue 3, allowing you to monitor and control CLI programming tools (Claude Code, Cursor, Aider, etc.) remotely.
 
 ## Features
 
 - 🔐 **Secure Authentication**: JWT Token + bcrypt password encryption
 - 🎨 **Beautiful UI**: Glassmorphism login page, modern design
-- 🖥️ **Session Management**: Create, delete, and view Claude Code sessions
+- 🖥️ **Session Management**: Create, delete, and view terminal sessions
 - 📡 **Real-time Terminal**: WebSocket streaming for terminal output
 - ⌨️ **Remote Control**: Send commands with realtime mode and command mode
-- 📱 **Mobile Optimized**: Custom virtual keyboard with arrow keys, Tab, Ctrl+C
+- 📱 **Mobile Optimized**: Custom virtual keyboard with arrow keys, Tab, Ctrl+C, Enter
 - 🎤 **Voice Input**: Voice input support (requires HTTPS)
 - 📂 **File Browser**: Built-in file explorer
 - 🔒 **File Reference**: @ symbol for file references
 - 🛡️ **Security**: Rate limiting, input validation, path whitelist
-- 🐳 **Docker**: One-click deployment
+- 📦 **Cross-Platform Build**: Compile to standalone executables, no Go runtime needed
 - 🌐 **Network Tunnel**: FRP, Tailscale, Cloudflare Tunnel
 - 🌍 **i18n**: Chinese and English support
 - 📜 **License**: Apache License 2.0
@@ -42,11 +42,11 @@ A remote Claude Code management tool built with Go + Vue 3, allowing you to moni
 
 ### Prerequisites
 
-- Go 1.21+
-- Node.js 20+
+- Go 1.21+ (only needed for source code, not required for compiled version)
+- Node.js 20+ (needed for frontend development)
 - tmux
 
-### One-Command Start
+### Option 1: Run from Source
 
 ```bash
 # 1. Clone the project
@@ -59,6 +59,32 @@ cd remote-code
 # Visit http://localhost:5173
 ```
 
+### Option 2: Build and Run (Recommended for Production)
+
+```bash
+# 1. Clone the project
+git clone https://github.com/xiaoliu10/remote-code.git
+cd remote-code
+
+# 2. Build backend (generates multi-platform executables)
+./build.sh
+
+# 3. Start services (will use compiled binary automatically)
+./start.sh --frp
+
+# Visit http://localhost:5173
+```
+
+**Build Outputs:**
+
+| Platform | Filename | Architecture |
+|----------|----------|--------------|
+| macOS Intel | `remote-code-macos-intel` | x86_64 |
+| macOS Apple Silicon | `remote-code-macos-apple` | arm64 |
+| Linux x64 | `remote-code-linux-x64` | x86_64 |
+| Linux ARM64 | `remote-code-linux-arm64` | arm64 |
+| Windows x64 | `remote-code-windows-x64.exe` | x86_64 |
+
 On first run, the system will automatically:
 - Create config directory at `~/.remote-code/`
 - Generate random admin password (save it!)
@@ -68,6 +94,7 @@ On first run, the system will automatically:
 ### Management Commands
 
 ```bash
+./build.sh          # Build multi-platform executables
 ./start.sh          # Start services
 ./start.sh --frp    # Start with FRP enabled
 ./start.sh --no-frp # Start without FRP
