@@ -293,17 +293,18 @@ async function handleLogin() {
   height: 20px;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.4);
+  color: #4A9CFF;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: color 0.2s;
+  transition: all 0.2s;
 }
 
 .toggle-password:hover {
-  color: rgba(255, 255, 255, 0.7);
+  color: #667eea;
+  transform: scale(1.1);
 }
 
 .toggle-password svg {

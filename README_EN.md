@@ -2,7 +2,28 @@
 
 English | [简体中文](./README.md)
 
-A remote terminal management tool built with Go + Vue 3, allowing you to monitor and control CLI programming tools (Claude Code, Cursor, Aider, etc.) remotely.
+A remote terminal management tool built with Go + Vue 3, allowing you to monitor and control CLI programming tools remotely.
+
+### Supported CLI Tools
+
+Remote Code helps you remotely manage and control various AI programming assistants and terminal tools:
+
+- **Claude Code**: Anthropic's official AI programming assistant CLI, providing intelligent code generation, refactoring, and debugging
+- **Aider**: Open-source AI pair programming tool supporting GPT-4, Claude, and other models
+- **Open Code**: Code assistant based on OpenAI API, providing code generation and optimization suggestions
+- **Qwen Code**: Alibaba's Tongyi Qianwen code assistant, supporting Chinese and multi-language programming
+- **Continue**: Open-source AI programming assistant supporting multiple LLM models
+- **Other CLI Tools**: Any terminal-based command-line tools (e.g., vim, htop, irssi) can be remotely managed through Remote Code
+
+### Why Remote Code?
+
+When running these AI programming tools locally, you might encounter these scenarios:
+- Need to remotely monitor and control programming sessions from mobile devices
+- Want to continue programming tasks on your home computer while away
+- Need to access and manage multiple programming sessions anytime, anywhere
+- Want to use AI programming assistants on phones or tablets
+
+Remote Code provides remote access and control of these CLI tools through a web interface and network tunneling technology, offering a smooth mobile experience and real-time terminal interaction.
 
 ## Features
 
