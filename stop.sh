@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Remote Claude Code Stop Script
-# Remote Claude Code 停止脚本
+# Remote Code Stop Script
+# Remote Code 停止脚本
 
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -18,7 +18,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 echo -e "${BLUE}"
-echo "🛑 Stopping Remote Claude Code"
+echo "🛑 Stopping Remote Code"
 echo "================================"
 echo -e "${NC}"
 

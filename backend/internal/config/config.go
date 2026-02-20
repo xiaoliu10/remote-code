@@ -20,8 +20,11 @@
 package config
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -57,9 +60,12 @@ type TmuxConfig struct {
 }
 
 func Load() *Config {
+	// 首先尝试从 config.ini 加载
+	loadConfigFromFile()
+
 	return &Config{
 		Server: ServerConfig{
-			Port:         getEnv("PORT", "8080"),
+			Port:         getEnv("BACKEND_PORT", "9090"),
 			ReadTimeout:  15 * time.Second,
 			WriteTimeout: 15 * time.Second,
 		},
@@ -78,6 +84,44 @@ func Load() *Config {
 		Tmux: TmuxConfig{
 			SocketPath: getEnv("TMUX_SOCKET", ""),
 		},
+	}
+}
+
+// loadConfigFromFile loads configuration from ~/.remote-code/config.ini
+func loadConfigFromFile() {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+
+	configFile := filepath.Join(homeDir, ".remote-code", "config.ini")
+
+	file, err := os.Open(configFile)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+
+		// Skip comments and empty lines
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		// Parse KEY=VALUE
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+
+			// Only set if not already set in environment
+			if os.Getenv(key) == "" {
+				os.Setenv(key, value)
+			}
+		}
 	}
 }
 

@@ -21,6 +21,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -35,6 +36,7 @@ import (
 	"github.com/xiaoliu10/remote-code/internal/auth"
 	"github.com/xiaoliu10/remote-code/internal/config"
 	"github.com/xiaoliu10/remote-code/internal/security"
+	"github.com/xiaoliu10/remote-code/internal/setup"
 	"github.com/xiaoliu10/remote-code/internal/tmux"
 	"github.com/xiaoliu10/remote-code/internal/websocket"
 	"golang.org/x/time/rate"
@@ -49,7 +51,23 @@ var (
 
 func main() {
 	// 打印版本信息
-	log.Printf("Remote Code v%s (%s) - Built at %s", Version, GitCommit, BuildTime)
+	fmt.Printf("\n")
+	fmt.Printf("╔══════════════════════════════════════════════════════════╗\n")
+	fmt.Printf("║              Remote Code v%-28s        ║\n", Version)
+	fmt.Printf("║                                                          ║\n")
+	fmt.Printf("║  Build: %-48s ║\n", GitCommit)
+	fmt.Printf("║  Time:  %-48s ║\n", BuildTime)
+	fmt.Printf("╚══════════════════════════════════════════════════════════╝\n")
+	fmt.Printf("\n")
+
+	// 检查是否需要运行配置向导
+	wizard := setup.NewWizard()
+	if wizard.NeedsSetup() {
+		log.Println("🔍 First time setup detected. Starting configuration wizard...")
+		if _, err := wizard.Run(); err != nil {
+			log.Fatalf("❌ Setup failed: %v", err)
+		}
+	}
 
 	// 加载 .env 文件
 	if err := godotenv.Load(); err != nil {
