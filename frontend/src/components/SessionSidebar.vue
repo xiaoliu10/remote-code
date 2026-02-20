@@ -311,14 +311,19 @@ function handleUpdateSession() {
  */
 async function handleDeleteSession(name: string) {
   try {
+    // If deleting the current session, navigate away first
+    // This ensures the WebSocket connection is properly closed
+    if (route.params.name === name) {
+      await router.push('/app/sessions')
+      // Small delay to ensure navigation completes and WebSocket is closed
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+
     await sessionStore.deleteSession(name)
     message.success(t('dashboard.sessionDeleted'))
-    // If we're deleting the current session, navigate away
-    if (route.params.name === name) {
-      router.push('/app/sessions')
-    }
-  } catch {
-    message.error(t('dashboard.deleteFailed'))
+  } catch (error: any) {
+    const errorMsg = error?.response?.data?.error || error?.message || t('dashboard.deleteFailed')
+    message.error(errorMsg)
   }
 }
 
