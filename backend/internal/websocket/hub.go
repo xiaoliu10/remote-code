@@ -45,11 +45,25 @@ type Message struct {
 
 // Client WebSocket 客户端连接
 type Client struct {
-	Hub      *Hub
-	Conn     *websocket.Conn
-	Send     chan []byte
+	Hub       *Hub
+	Conn      *websocket.Conn
+	Send      chan []byte
 	SessionID string
-	UserID   string
+	UserID    string
+	closed    bool
+	closeMu   sync.Mutex
+}
+
+// SafeClose 安全关闭客户端连接
+func (c *Client) SafeClose() {
+	c.closeMu.Lock()
+	defer c.closeMu.Unlock()
+
+	if c.closed {
+		return
+	}
+	c.closed = true
+	close(c.Send)
 }
 
 // Hub WebSocket 连接池管理器
@@ -97,7 +111,7 @@ func (h *Hub) registerClient(client *Client) {
 	// 如果同一会话已有连接，关闭旧的
 	if existing, exists := h.clients[client.SessionID]; exists {
 		existing.Conn.Close()
-		close(existing.Send)
+		existing.SafeClose()
 	}
 
 	h.clients[client.SessionID] = client
@@ -118,7 +132,7 @@ func (h *Hub) unregisterClient(client *Client) {
 
 	if _, ok := h.clients[client.SessionID]; ok {
 		delete(h.clients, client.SessionID)
-		close(client.Send)
+		client.SafeClose()
 		client.Conn.Close()
 	}
 
