@@ -350,7 +350,7 @@ let fitAddon: FitAddon | null = null
 let searchAddon: SearchAddon | null = null
 
 // WebSocket connection
-const { connected, error, connect, disconnect, sendCommand, sendKeys, onMessage, onConnect, onDisconnect } =
+const { connected, error, kicked, connect, disconnect, sendCommand, sendKeys, onMessage, onConnect, onDisconnect } =
   useWebSocket(props.sessionName)
 
 /**
@@ -830,6 +830,14 @@ function setupWebSocketHandlers() {
         terminal.writeln(`\x1b[31m${t('terminal.error')}: ${errorMsg}\x1b[0m`)
         emit('error', errorMsg)
         break
+      case 'kicked':
+        // Connection was kicked by another device
+        terminal.writeln('')
+        terminal.writeln('\x1b[33m' + String(msg.data) + '\x1b[0m')
+        terminal.writeln('\x1b[33mThis session is now being used from another device.\x1b[0m')
+        terminal.writeln('\x1b[33mPlease refresh the page if you want to reconnect.\x1b[0m')
+        message.warning('Connection replaced by another device')
+        break
       case 'status':
         // Handle status updates
         break
@@ -853,6 +861,12 @@ function handleClear() {
  * Reconnect to session
  */
 function handleReconnect() {
+  // Don't reconnect if kicked
+  if (kicked.value) {
+    message.warning('This session is being used from another device. Please refresh the page.')
+    return
+  }
+
   disconnect()
   setTimeout(() => {
     connect()

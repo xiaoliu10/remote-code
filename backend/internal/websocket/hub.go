@@ -108,8 +108,21 @@ func (h *Hub) registerClient(client *Client) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	// 如果同一会话已有连接，关闭旧的
+	// 如果同一会话已有连接，发送踢出消息给旧连接
 	if existing, exists := h.clients[client.SessionID]; exists {
+		// 发送踢出消息
+		kickMsg := Message{
+			Type: "kicked",
+			Data: "Your connection has been replaced by a new connection from another device",
+		}
+		if data, err := json.Marshal(kickMsg); err == nil {
+			select {
+			case existing.Send <- data:
+			default:
+			}
+		}
+		// 给旧连接一点时间接收消息
+		time.Sleep(100 * time.Millisecond)
 		existing.Conn.Close()
 		existing.SafeClose()
 	}

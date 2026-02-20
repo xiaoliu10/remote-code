@@ -60,6 +60,7 @@ export function useWebSocket(sessionName: string) {
   const ws = ref<WebSocket | null>(null)
   const connected = ref(false)
   const error = ref<string | null>(null)
+  const kicked = ref(false) // New: track if connection was kicked
 
   const messageHandlers: MessageHandler[] = []
   const connectHandlers: ConnectionHandler[] = []
@@ -70,6 +71,11 @@ export function useWebSocket(sessionName: string) {
   const wsUrl = `${wsBaseUrl}/ws/${sessionName}?token=${token}`
 
   const connect = () => {
+    // Don't reconnect if kicked
+    if (kicked.value) {
+      return
+    }
+
     if (ws.value?.readyState === WebSocket.OPEN) {
       return
     }
@@ -80,12 +86,16 @@ export function useWebSocket(sessionName: string) {
       ws.value.onopen = () => {
         connected.value = true
         error.value = null
+        kicked.value = false // Reset kicked flag on new connection
         connectHandlers.forEach((h) => h())
       }
 
       ws.value.onclose = () => {
         connected.value = false
-        disconnectHandlers.forEach((h) => h())
+        // Don't call disconnect handlers if kicked
+        if (!kicked.value) {
+          disconnectHandlers.forEach((h) => h())
+        }
       }
 
       ws.value.onerror = (event) => {
@@ -96,6 +106,18 @@ export function useWebSocket(sessionName: string) {
       ws.value.onmessage = (event) => {
         try {
           const message: WSMessage = JSON.parse(event.data)
+
+          // Handle kicked message
+          if (message.type === 'kicked') {
+            kicked.value = true
+            error.value = String(message.data)
+            // Disconnect without triggering reconnect
+            if (ws.value) {
+              ws.value.close()
+            }
+            return
+          }
+
           messageHandlers.forEach((h) => h(message))
         } catch (e) {
           console.error('Failed to parse WebSocket message:', e)
@@ -149,6 +171,7 @@ export function useWebSocket(sessionName: string) {
   return {
     connected,
     error,
+    kicked,
     connect,
     disconnect,
     send,
