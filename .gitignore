@@ -55,3 +55,4 @@ backend/server
 
 # Local backup (contains personal config)
 .backup/
+build/

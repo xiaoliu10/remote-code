@@ -21,13 +21,13 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/yourname/remote-code/internal/api/handlers"
-	"github.com/yourname/remote-code/internal/api/middleware"
-	"github.com/yourname/remote-code/internal/auth"
-	"github.com/yourname/remote-code/internal/config"
-	"github.com/yourname/remote-code/internal/security"
-	"github.com/yourname/remote-code/internal/tmux"
-	"github.com/yourname/remote-code/internal/websocket"
+	"github.com/xiaoliu10/remote-code/internal/api/handlers"
+	"github.com/xiaoliu10/remote-code/internal/api/middleware"
+	"github.com/xiaoliu10/remote-code/internal/auth"
+	"github.com/xiaoliu10/remote-code/internal/config"
+	"github.com/xiaoliu10/remote-code/internal/security"
+	"github.com/xiaoliu10/remote-code/internal/tmux"
+	"github.com/xiaoliu10/remote-code/internal/websocket"
 )
 
 // RouterConfig 路由配置

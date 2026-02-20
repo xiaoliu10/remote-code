@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Remote Claude Code Unified Startup Script
-# Remote Claude Code 统一启动脚本
+# Remote Code Unified Startup Script
+# Remote Code 统一启动脚本
 #
 # Usage: ./start.sh [options]
 # Options:
@@ -39,7 +39,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --help|-h)
-            echo "Remote Claude Code Startup Script"
+            echo "Remote Code Startup Script"
             echo ""
             echo "Usage: ./start.sh [options]"
             echo ""
@@ -59,7 +59,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo -e "${BLUE}"
-echo "🚀 Remote Claude Code"
+echo "🚀 Remote Code"
 echo "================================"
 echo -e "${NC}"
 
@@ -114,7 +114,7 @@ init_config() {
         local jwt_secret=$(openssl rand -base64 32 | tr -d '/+=' | head -c 32)
 
         cat > "$CONFIG_FILE" << EOF
-# Remote Claude Code Configuration
+# Remote Code Configuration
 # 配置文件路径: $CONFIG_FILE
 #
 # 修改此文件后重启服务生效
@@ -264,7 +264,7 @@ auth.token = "$FRP_TOKEN"
 
 # Frontend service
 [[proxies]]
-name = "remote-claude-frontend"
+name = "remote-code-frontend"
 type = "tcp"
 localIP = "127.0.0.1"
 localPort = $FRONTEND_PORT
@@ -272,7 +272,7 @@ remotePort = $FRONTEND_PORT
 
 # Backend API + WebSocket service
 [[proxies]]
-name = "remote-claude-backend"
+name = "remote-code-backend"
 type = "tcp"
 localIP = "127.0.0.1"
 localPort = $BACKEND_PORT
@@ -319,7 +319,31 @@ start_backend() {
         exit 1
     fi
 
-    go run cmd/server/main.go > "$LOG_DIR/backend.log" 2>&1 &
+    # Detect OS and architecture for compiled binary
+    local os="linux"
+    local arch="amd64"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        os="macos"
+        if [[ "$(uname -m)" == "arm64" ]]; then
+            arch="apple"
+        else
+            arch="intel"
+        fi
+    fi
+
+    # Look for compiled binary
+    local binary_name="remote-code-${os}-${arch}"
+    local binary_path="$SCRIPT_DIR/build/$binary_name"
+
+    if [ -f "$binary_path" ]; then
+        echo -e "${GREEN}   Using compiled binary: $binary_name${NC}"
+        "$binary_path" > "$LOG_DIR/backend.log" 2>&1 &
+    else
+        echo -e "${YELLOW}   No compiled binary found, using 'go run'${NC}"
+        echo -e "${YELLOW}   Run './build.sh' to compile for faster startup${NC}"
+        go run cmd/server/main.go > "$LOG_DIR/backend.log" 2>&1 &
+    fi
+
     BACKEND_PID=$!
 
     cd "$SCRIPT_DIR"

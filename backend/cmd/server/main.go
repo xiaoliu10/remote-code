@@ -30,17 +30,27 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/yourname/remote-code/internal/api"
-	"github.com/yourname/remote-code/internal/api/middleware"
-	"github.com/yourname/remote-code/internal/auth"
-	"github.com/yourname/remote-code/internal/config"
-	"github.com/yourname/remote-code/internal/security"
-	"github.com/yourname/remote-code/internal/tmux"
-	"github.com/yourname/remote-code/internal/websocket"
+	"github.com/xiaoliu10/remote-code/internal/api"
+	"github.com/xiaoliu10/remote-code/internal/api/middleware"
+	"github.com/xiaoliu10/remote-code/internal/auth"
+	"github.com/xiaoliu10/remote-code/internal/config"
+	"github.com/xiaoliu10/remote-code/internal/security"
+	"github.com/xiaoliu10/remote-code/internal/tmux"
+	"github.com/xiaoliu10/remote-code/internal/websocket"
 	"golang.org/x/time/rate"
 )
 
+// 版本信息（编译时注入）
+var (
+	Version   = "dev"
+	BuildTime = "unknown"
+	GitCommit = "unknown"
+)
+
 func main() {
+	// 打印版本信息
+	log.Printf("Remote Code v%s (%s) - Built at %s", Version, GitCommit, BuildTime)
+
 	// 加载 .env 文件
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment variables")
@@ -101,7 +111,7 @@ func main() {
 
 	// 启动服务器
 	go func() {
-		log.Printf("Starting Remote Claude Code Server on port %s", cfg.Server.Port)
+		log.Printf("Starting Remote Code Server on port %s", cfg.Server.Port)
 		log.Printf("Allowed working directory: %s", cfg.Security.AllowedWorkDir)
 		log.Printf("Rate limiting: %v (%d RPS, burst %d)",
 			cfg.Security.EnableRateLimit,
