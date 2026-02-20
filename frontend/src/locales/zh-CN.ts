@@ -88,9 +88,8 @@ export default {
     sessionNameReadOnly: '会话名称创建后不可修改',
     workDirectory: '工作目录',
     workDirectoryPlaceholder: '/home/user/projects',
-    workDirectoryNote: '工作目录仅用于显示，修改需重启会话',
+    workDirectoryReadOnly: '工作目录在会话创建后不可修改，如需更改请删除并重新创建会话',
     sessionConfig: '会话配置',
-    sessionInfoUpdated: '会话信息已更新',
     noSessions: '暂无会话'
   },
   fileExplorer: {

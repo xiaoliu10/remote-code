@@ -88,9 +88,8 @@ export default {
     sessionNameReadOnly: 'Session name cannot be changed after creation',
     workDirectory: 'Work Directory',
     workDirectoryPlaceholder: '/home/user/projects',
-    workDirectoryNote: 'Work directory is for display only, changes require session restart',
+    workDirectoryReadOnly: 'Work directory cannot be changed after session creation. Please delete and recreate the session to change it',
     sessionConfig: 'Session Config',
-    sessionInfoUpdated: 'Session info updated',
     noSessions: 'No sessions'
   },
   fileExplorer: {

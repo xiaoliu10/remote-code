@@ -270,7 +270,7 @@ function openEditDialog(session: Session) {
 
   dialog.create({
     title: t('sidebar.sessionConfig'),
-    positiveText: t('common.save'),
+    positiveText: t('common.confirm'),
     negativeText: t('common.cancel'),
     onPositiveClick: () => {
       handleUpdateSession()
@@ -289,22 +289,21 @@ function openEditDialog(session: Session) {
         h('label', { style: 'display: block; margin-bottom: 8px; color: #A9B7C6; font-size: 13px;' }, t('sidebar.workDirectory')),
         h(NInput, {
           value: editForm.value.workDir,
-          onUpdateValue: (v: string) => { editForm.value.workDir = v },
+          disabled: true,
           placeholder: t('sidebar.workDirectoryPlaceholder')
         }),
-        h('span', { style: 'font-size: 11px; color: #808080; margin-top: 4px; display: block;' }, t('sidebar.workDirectoryNote'))
+        h('span', { style: 'font-size: 11px; color: #808080; margin-top: 4px; display: block;' }, t('sidebar.workDirectoryReadOnly'))
       ])
     ])
   })
 }
 
 /**
- * Update session (currently only work_dir display, actual change requires session restart)
+ * Update session (currently session info is read-only)
  */
 function handleUpdateSession() {
-  // For now, just show a message that this is display-only
-  // In the future, we could implement session restart with new work_dir
-  message.info(t('sidebar.sessionInfoUpdated'))
+  // Session info is read-only, just close the dialog
+  // To change work directory, user needs to delete and recreate the session
 }
 
 /**
