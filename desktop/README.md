@@ -1,6 +1,6 @@
-# Remote Claude Code Desktop Application
+# Remote Code Desktop Application
 
-桌面版 Remote Claude Code 应用程序，支持 macOS、Windows 和 Linux。
+桌面版 Remote Code 应用程序，支持 macOS、Windows 和 Linux。
 
 ## 功能特性
 
@@ -124,9 +124,9 @@ desktop/
 
 配置文件存储位置：
 
-- **macOS**: `~/Library/Application Support/remote-claude-code/config.json`
-- **Windows**: `%APPDATA%/remote-claude-code/config.json`
-- **Linux**: `~/.config/remote-claude-code/config.json`
+- **macOS**: `~/Library/Application Support/remote-code/config.json`
+- **Windows**: `%APPDATA%/remote-code/config.json`
+- **Linux**: `~/.config/remote-code/config.json`
 
 ## 打包分发
 

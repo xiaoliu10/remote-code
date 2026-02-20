@@ -75,7 +75,7 @@
 
 #### 问题 1: API 响应格式不匹配 [已修复]
 
-**文件**: `/Users/jason/projects/opensource/remote-claude-code/frontend/src/stores/file.ts`
+**文件**: `/Users/jason/projects/opensource/remote-code/frontend/src/stores/file.ts`
 
 **修复内容**:
 ```typescript
@@ -89,7 +89,7 @@ currentPath.value = response.data.path || path
 
 #### 问题 2: 类型定义不完整 [已修复]
 
-**文件**: `/Users/jason/projects/opensource/remote-claude-code/frontend/src/api/client.ts`
+**文件**: `/Users/jason/projects/opensource/remote-code/frontend/src/api/client.ts`
 
 **修复内容**:
 ```typescript
@@ -115,7 +115,7 @@ export interface FileListResponse {
 
 #### 问题 3: 路径显示问题 [已修复]
 
-**文件**: `/Users/jason/projects/opensource/remote-claude-code/backend/internal/api/handlers/file.go`
+**文件**: `/Users/jason/projects/opensource/remote-code/backend/internal/api/handlers/file.go`
 
 **修复内容**:
 ```go

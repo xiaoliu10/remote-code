@@ -39,7 +39,7 @@ export default {
     disconnected: '已断开'
   },
   dashboard: {
-    title: 'Remote Claude Code',
+    title: 'Remote Code',
     createSession: '创建新会话',
     sessionName: '会话名称',
     sessionNamePlaceholder: 'my-project',
@@ -65,7 +65,7 @@ export default {
     leaveConfirm: 'WebSocket 连接将被关闭，确定离开吗？',
     stay: '留下',
     leave: '离开',
-    welcomeMessage: 'Remote Claude Code 终端',
+    welcomeMessage: 'Remote Code 终端',
     sessionLabel: '会话',
     connecting: '正在连接...'
   },
@@ -120,7 +120,7 @@ export default {
     title: '远程终端',
     typeCommand: '输入命令... (输入 @ 引用文件)',
     typeCommandRealtime: '实时输入模式... (字符实时发送)',
-    welcome: 'Remote Claude Code 终端',
+    welcome: 'Remote Code 终端',
     session: '会话',
     connected: '已连接到会话',
     disconnected: '与服务器断开连接',

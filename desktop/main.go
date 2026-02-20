@@ -23,7 +23,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	app.ConfigDir = filepath.Join(homeDir, ".remote-claude-code")
+	app.ConfigDir = filepath.Join(homeDir, ".remote-code")
 	app.ConfigPath = filepath.Join(app.ConfigDir, "config.json")
 
 	// Create application with options

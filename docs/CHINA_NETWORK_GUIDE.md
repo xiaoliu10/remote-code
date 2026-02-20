@@ -176,7 +176,7 @@ iOS 上可以使用：
 # 1. 安装 cpolar
 curl -sL https://git.io/cpolar | sudo bash
 
-# 2. 启动 Remote Claude Code 本地服务
+# 2. 启动 Remote Code 本地服务
 ./start-with-tunnel.sh local
 
 # 3. 在另一个终端启动 cpolar

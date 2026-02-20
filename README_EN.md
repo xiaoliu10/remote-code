@@ -1,4 +1,4 @@
-# Remote Claude Code
+# Remote Code
 
 English | [简体中文](./README.md)
 
@@ -50,8 +50,8 @@ A remote Claude Code management tool built with Go + Vue 3, allowing you to moni
 
 ```bash
 # 1. Clone the project
-git clone https://github.com/xiaoliu10/remote-claude-code.git
-cd remote-claude-code
+git clone https://github.com/xiaoliu10/remote-code.git
+cd remote-code
 
 # 2. Start services (auto-creates config on first run)
 ./start.sh
@@ -60,7 +60,7 @@ cd remote-claude-code
 ```
 
 On first run, the system will automatically:
-- Create config directory at `~/.remote-claude-code/`
+- Create config directory at `~/.remote-code/`
 - Generate random admin password (save it!)
 - Start backend service (port 9090)
 - Start frontend service (port 5173)
@@ -76,7 +76,7 @@ On first run, the system will automatically:
 
 ### Configuration
 
-Config file located at `~/.remote-claude-code/config.ini`:
+Config file located at `~/.remote-code/config.ini`:
 
 ```ini
 # Backend config
@@ -96,7 +96,7 @@ FRP_TOKEN=your-token
 
 ### Why Do You Need Tunneling?
 
-Remote Claude Code runs on your local network by default and is only accessible within the LAN. When you need to **access your home Claude Code sessions remotely from outside (office, cafe, mobile network)**, you need a tunneling solution.
+Remote Code runs on your local network by default and is only accessible within the LAN. When you need to **access your home Claude Code sessions remotely from outside (office, cafe, mobile network)**, you need a tunneling solution.
 
 **Use Cases:**
 - Running Claude Code on home PC, need remote control when away
@@ -110,7 +110,7 @@ FRP (Fast Reverse Proxy) is a high-performance tunneling tool that exposes local
 
 #### 1. Configure FRP
 
-Edit `~/.remote-claude-code/config.ini`:
+Edit `~/.remote-code/config.ini`:
 
 ```ini
 FRP_ENABLED=true
@@ -232,7 +232,7 @@ Click the file icon in sidebar to browse files.
 ## Directory Structure
 
 ```
-~/.remote-claude-code/          # Config directory
+~/.remote-code/          # Config directory
 ├── config.ini                  # Main config
 ├── frpc.ini                    # FRP config (auto-generated)
 ├── frpc                        # FRP client (auto-downloaded)
@@ -241,7 +241,7 @@ Click the file icon in sidebar to browse files.
     ├── frontend.log
     └── frp.log
 
-remote-claude-code/             # Source directory
+remote-code/             # Source directory
 ├── backend/                    # Go backend
 ├── frontend/                   # Vue frontend
 ├── desktop/                    # Desktop app

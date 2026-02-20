@@ -34,7 +34,7 @@
         </div>
       </div>
 
-      <h1 class="login-title">Remote Claude Code</h1>
+      <h1 class="login-title">Remote Code</h1>
       <p class="login-subtitle">Sign in to continue</p>
 
       <div class="form-wrapper">

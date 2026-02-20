@@ -1,4 +1,4 @@
-# Remote Claude Code
+# Remote Code
 
 [English](./README_EN.md) | 简体中文
 
@@ -50,8 +50,8 @@
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/xiaoliu10/remote-claude-code.git
-cd remote-claude-code
+git clone https://github.com/xiaoliu10/remote-code.git
+cd remote-code
 
 # 2. 启动服务（首次启动会自动创建配置）
 ./start.sh
@@ -60,7 +60,7 @@ cd remote-claude-code
 ```
 
 首次启动时，系统会自动：
-- 在 `~/.remote-claude-code/` 创建配置目录
+- 在 `~/.remote-code/` 创建配置目录
 - 生成随机管理员密码（请保存！）
 - 启动后端服务（端口 9090）
 - 启动前端服务（端口 5173）
@@ -76,7 +76,7 @@ cd remote-claude-code
 
 ### 配置文件
 
-配置文件位于 `~/.remote-claude-code/config.ini`：
+配置文件位于 `~/.remote-code/config.ini`：
 
 ```ini
 # 后端配置
@@ -96,7 +96,7 @@ FRP_TOKEN=your-token
 
 ### 为什么需要内网穿透？
 
-Remote Claude Code 默认运行在本地网络中，只能在局域网内访问。当你需要**在外网（如公司、咖啡厅、移动网络）远程访问家中的 Claude Code 会话**时，就需要内网穿透。
+Remote Code 默认运行在本地网络中，只能在局域网内访问。当你需要**在外网（如公司、咖啡厅、移动网络）远程访问家中的 Claude Code 会话**时，就需要内网穿透。
 
 **适用场景：**
 - 家中电脑运行 Claude Code，外出时需要远程控制
@@ -110,7 +110,7 @@ FRP (Fast Reverse Proxy) 是一个高性能的内网穿透工具，通过公网�
 
 #### 1. 配置 FRP
 
-编辑 `~/.remote-claude-code/config.ini`：
+编辑 `~/.remote-code/config.ini`：
 
 ```ini
 FRP_ENABLED=true
@@ -232,7 +232,7 @@ docker-compose --profile cloudflare up -d
 ## 目录结构
 
 ```
-~/.remote-claude-code/          # 配置目录
+~/.remote-code/          # 配置目录
 ├── config.ini                  # 主配置文件
 ├── frpc.ini                    # FRP 配置（自动生成）
 ├── frpc                        # FRP 客户端（自动下载）
@@ -241,7 +241,7 @@ docker-compose --profile cloudflare up -d
     ├── frontend.log
     └── frp.log
 
-remote-claude-code/             # 源码目录
+remote-code/             # 源码目录
 ├── backend/                    # Go 后端
 ├── frontend/                   # Vue 前端
 ├── desktop/                    # 桌面应用

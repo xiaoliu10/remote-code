@@ -24,7 +24,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yourname/remote-claude-code/internal/auth"
+	"github.com/yourname/remote-code/internal/auth"
 )
 
 // AuthMiddleware JWT 认证中间件

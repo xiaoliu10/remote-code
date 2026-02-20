@@ -1,4 +1,4 @@
-module remote-claude-code-desktop
+module remote-code-desktop
 
 go 1.22.0
 

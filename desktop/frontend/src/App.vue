@@ -12,7 +12,7 @@
           </svg>
         </div>
 
-        <h1>Remote Claude Code</h1>
+        <h1>Remote Code</h1>
         <p class="subtitle">Initial Setup</p>
 
         <!-- Platform Notice -->
@@ -159,7 +159,7 @@
       <!-- Main Content -->
       <div v-else class="main-content">
         <div class="app-header">
-          <h1>Remote Claude Code</h1>
+          <h1>Remote Code</h1>
           <div class="header-actions">
             <button class="btn-icon" @click="openInBrowser" title="Open in Browser">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

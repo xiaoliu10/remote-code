@@ -21,13 +21,13 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/yourname/remote-claude-code/internal/api/handlers"
-	"github.com/yourname/remote-claude-code/internal/api/middleware"
-	"github.com/yourname/remote-claude-code/internal/auth"
-	"github.com/yourname/remote-claude-code/internal/config"
-	"github.com/yourname/remote-claude-code/internal/security"
-	"github.com/yourname/remote-claude-code/internal/tmux"
-	"github.com/yourname/remote-claude-code/internal/websocket"
+	"github.com/yourname/remote-code/internal/api/handlers"
+	"github.com/yourname/remote-code/internal/api/middleware"
+	"github.com/yourname/remote-code/internal/auth"
+	"github.com/yourname/remote-code/internal/config"
+	"github.com/yourname/remote-code/internal/security"
+	"github.com/yourname/remote-code/internal/tmux"
+	"github.com/yourname/remote-code/internal/websocket"
 )
 
 // RouterConfig 路由配置

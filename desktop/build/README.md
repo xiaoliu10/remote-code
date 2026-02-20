@@ -7,8 +7,8 @@ This directory contains build outputs and resources.
 ```
 build/
 ├── bin/              # Compiled executables
-│   ├── remote-claude-code      # Main app (macOS/Linux)
-│   ├── remote-claude-code.exe  # Main app (Windows)
+│   ├── remote-code      # Main app (macOS/Linux)
+│   ├── remote-code.exe  # Main app (Windows)
 │   └── backend                  # Backend server (embedded)
 ├── appicon.png       # Source icon for generating platform icons
 ├── icons/            # Generated platform-specific icons
@@ -16,7 +16,7 @@ build/
 │   ├── icon.ico     # Windows icon
 │   └── png/         # Linux icons
 └── darwin/           # macOS app bundle
-    └── Remote Claude Code.app
+    └── Remote Code.app
 ```
 
 ## Icon Generation

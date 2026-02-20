@@ -30,13 +30,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/yourname/remote-claude-code/internal/api"
-	"github.com/yourname/remote-claude-code/internal/api/middleware"
-	"github.com/yourname/remote-claude-code/internal/auth"
-	"github.com/yourname/remote-claude-code/internal/config"
-	"github.com/yourname/remote-claude-code/internal/security"
-	"github.com/yourname/remote-claude-code/internal/tmux"
-	"github.com/yourname/remote-claude-code/internal/websocket"
+	"github.com/yourname/remote-code/internal/api"
+	"github.com/yourname/remote-code/internal/api/middleware"
+	"github.com/yourname/remote-code/internal/auth"
+	"github.com/yourname/remote-code/internal/config"
+	"github.com/yourname/remote-code/internal/security"
+	"github.com/yourname/remote-code/internal/tmux"
+	"github.com/yourname/remote-code/internal/websocket"
 	"golang.org/x/time/rate"
 )
 

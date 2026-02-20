@@ -48,7 +48,7 @@ func (m *JWTManager) Generate(userID, username string) (string, error) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.duration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "remote-claude-code",
+			Issuer:    "remote-code",
 		},
 	}
 

@@ -14,8 +14,8 @@
 
 ```bash
 # 在服务器上
-sudo cp nginx/remote-claude-code.conf /etc/nginx/sites-available/
-sudo ln -s /etc/nginx/sites-available/remote-claude-code.conf /etc/nginx/sites-enabled/
+sudo cp nginx/remote-code.conf /etc/nginx/sites-available/
+sudo ln -s /etc/nginx/sites-available/remote-code.conf /etc/nginx/sites-enabled/
 ```
 
 ### 2. 修改配置
@@ -23,7 +23,7 @@ sudo ln -s /etc/nginx/sites-available/remote-claude-code.conf /etc/nginx/sites-e
 编辑配置文件，修改以下内容：
 
 ```bash
-sudo vim /etc/nginx/sites-available/remote-claude-code.conf
+sudo vim /etc/nginx/sites-available/remote-code.conf
 ```
 
 需要修改：

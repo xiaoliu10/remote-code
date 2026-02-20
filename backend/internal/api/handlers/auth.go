@@ -23,7 +23,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yourname/remote-claude-code/internal/auth"
+	"github.com/yourname/remote-code/internal/auth"
 	"golang.org/x/crypto/bcrypt"
 )
 

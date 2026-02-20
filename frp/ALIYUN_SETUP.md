@@ -21,7 +21,7 @@
 | 端口范围 | 授权对象 | 说明 |
 |---------|---------|------|
 | 7000 | 0.0.0.0/0 | Frp 服务端口 |
-| 9090 | 0.0.0.0/0 | Remote Claude Code 应用 |
+| 9090 | 0.0.0.0/0 | Remote Code 应用 |
 | 7500 | 0.0.0.0/0 | Frp 仪表板（可选） |
 
 ---
@@ -157,7 +157,7 @@ chmod +x frpc
 
 ---
 
-## 第六步：启动 Remote Claude Code
+## 第六步：启动 Remote Code
 
 ```bash
 # 方式 1：使用启动脚本
@@ -194,7 +194,7 @@ http://你的服务器IP:9090
 - [ ] 本地 frpc.ini 中的 serverAddr 已修改
 - [ ] 本地 frpc.ini 中的 auth.token 与服务器一致
 - [ ] 本地 Frp 客户端连接成功
-- [ ] Remote Claude Code 后端和前端已启动
+- [ ] Remote Code 后端和前端已启动
 
 ---
 

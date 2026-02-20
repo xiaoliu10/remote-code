@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yourname/remote-claude-code/internal/security"
-	"github.com/yourname/remote-claude-code/internal/tmux"
+	"github.com/yourname/remote-code/internal/security"
+	"github.com/yourname/remote-code/internal/tmux"
 )
 
 // SessionHandler 会话处理器

@@ -39,7 +39,7 @@ export default {
     disconnected: 'Disconnected'
   },
   dashboard: {
-    title: 'Remote Claude Code',
+    title: 'Remote Code',
     createSession: 'Create New Session',
     sessionName: 'Session Name',
     sessionNamePlaceholder: 'my-project',
@@ -65,7 +65,7 @@ export default {
     leaveConfirm: 'Your WebSocket connection will be closed.',
     stay: 'Stay',
     leave: 'Leave',
-    welcomeMessage: 'Remote Claude Code Terminal',
+    welcomeMessage: 'Remote Code Terminal',
     sessionLabel: 'Session',
     connecting: 'Connecting...'
   },
@@ -120,7 +120,7 @@ export default {
     title: 'Remote Terminal',
     typeCommand: 'Type command... (use @ to reference files)',
     typeCommandRealtime: 'Realtime input mode... (chars sent live)',
-    welcome: 'Remote Claude Code Terminal',
+    welcome: 'Remote Code Terminal',
     session: 'Session',
     connected: 'Connected to session',
     disconnected: 'Disconnected from server',

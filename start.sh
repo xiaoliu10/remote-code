@@ -16,7 +16,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Config directory (user's home)
-CONFIG_DIR="$HOME/.remote-claude-code"
+CONFIG_DIR="$HOME/.remote-code"
 CONFIG_FILE="$CONFIG_DIR/config.ini"
 
 # Colors for output

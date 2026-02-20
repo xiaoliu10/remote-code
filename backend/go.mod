@@ -1,4 +1,4 @@
-module github.com/yourname/remote-claude-code
+module github.com/xiaoliu10/remote-code
 
 go 1.21
 

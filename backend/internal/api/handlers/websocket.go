@@ -27,8 +27,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	gorillaws "github.com/gorilla/websocket"
-	"github.com/yourname/remote-claude-code/internal/tmux"
-	"github.com/yourname/remote-claude-code/internal/websocket"
+	"github.com/yourname/remote-code/internal/tmux"
+	"github.com/yourname/remote-code/internal/websocket"
 )
 
 // WebSocketHandler WebSocket 处理器

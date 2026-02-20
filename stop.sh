@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Config directory
-CONFIG_DIR="$HOME/.remote-claude-code"
+CONFIG_DIR="$HOME/.remote-code"
 
 # Colors
 RED='\033[0;31m'
