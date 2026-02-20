@@ -1033,34 +1033,87 @@ onUnmounted(() => {
   overflow: hidden;
   background: #1E1E1E;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Enable xterm.js scrollbar */
+/* Enable xterm.js scrollbar with prominent styling */
 :deep(.xterm) {
   height: 100%;
+  padding-right: 16px;
+}
+
+:deep(.xterm-screen) {
+  padding-right: 8px;
 }
 
 :deep(.xterm-viewport) {
-  overflow-y: auto !important;
-  scrollbar-width: thin;
-  scrollbar-color: #555 #2B2B2B;
+  overflow-y: scroll !important;
+  scrollbar-width: auto;
+  scrollbar-color: #4A9CFF #1E1E1E;
+  /* Ensure viewport takes full height */
+  height: 100% !important;
 }
 
+/* Webkit scrollbar (Chrome, Safari, Edge) */
 :deep(.xterm-viewport::-webkit-scrollbar) {
-  width: 8px;
+  width: 16px;
+  background: #1E1E1E;
 }
 
 :deep(.xterm-viewport::-webkit-scrollbar-track) {
   background: #2B2B2B;
+  border-left: 2px solid #3C3F41;
 }
 
 :deep(.xterm-viewport::-webkit-scrollbar-thumb) {
-  background-color: #555;
-  border-radius: 4px;
+  background: linear-gradient(180deg, #4A9CFF 0%, #667eea 100%);
+  border-radius: 0;
+  border: 3px solid #2B2B2B;
+  min-height: 60px;
+  box-shadow: 0 0 4px rgba(74, 156, 255, 0.5);
 }
 
 :deep(.xterm-viewport::-webkit-scrollbar-thumb:hover) {
-  background-color: #777;
+  background: linear-gradient(180deg, #5CB3FF 0%, #7D8FEE 100%);
+  box-shadow: 0 0 8px rgba(74, 156, 255, 0.8);
+}
+
+:deep(.xterm-viewport::-webkit-scrollbar-thumb:active) {
+  background: linear-gradient(180deg, #3D8CE8 0%, #5A73D6 100%);
+}
+
+/* Hide scrollbar buttons */
+:deep(.xterm-viewport::-webkit-scrollbar-button:start:decrement),
+:deep(.xterm-viewport::-webkit-scrollbar-button:end:increment) {
+  display: block;
+  height: 20px;
+  background: #3C3F41;
+  border: none;
+}
+
+:deep(.xterm-viewport::-webkit-scrollbar-button:start:decrement:after),
+:deep(.xterm-viewport::-webkit-scrollbar-button:end:increment:after) {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  margin: 3px auto;
+}
+
+:deep(.xterm-viewport::-webkit-scrollbar-button:start:decrement:after) {
+  border-bottom: 6px solid #888;
+}
+
+:deep(.xterm-viewport::-webkit-scrollbar-button:end:increment:after) {
+  border-top: 6px solid #888;
+}
+
+:deep(.xterm-viewport::-webkit-scrollbar-button:hover:after) {
+  border-bottom-color: #4A9CFF;
+  border-top-color: #4A9CFF;
 }
 
 .terminal-input {
