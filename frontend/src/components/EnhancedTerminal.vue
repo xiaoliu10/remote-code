@@ -34,11 +34,35 @@
             <n-icon><TrashIcon /></n-icon>
           </template>
         </n-button>
-        <n-button quaternary size="small" @click="handleReconnect" :disabled="connected">
+        <n-button quaternary size="small" @click="handleReconnect" :disabled="connected || kicked">
           <template #icon>
             <n-icon><RefreshIcon /></n-icon>
           </template>
         </n-button>
+        <n-divider vertical />
+        <!-- Scroll controls -->
+        <n-button-group size="small">
+          <n-button quaternary size="small" @click="scrollToTop" title="Scroll to top">
+            <template #icon>
+              <n-icon><ArrowUpIcon /></n-icon>
+            </template>
+          </n-button>
+          <n-button quaternary size="small" @click="scrollPageUp" title="Page up">
+            <template #icon>
+              <n-icon><ChevronUpIcon /></n-icon>
+            </template>
+          </n-button>
+          <n-button quaternary size="small" @click="scrollPageDown" title="Page down">
+            <template #icon>
+              <n-icon><ChevronDownIcon /></n-icon>
+            </template>
+          </n-button>
+          <n-button quaternary size="small" @click="scrollToBottom" title="Scroll to bottom">
+            <template #icon>
+              <n-icon><ArrowDownIcon /></n-icon>
+            </template>
+          </n-button>
+        </n-button-group>
       </div>
     </div>
 
@@ -251,7 +275,11 @@ import {
   DocumentOutline as DocumentIcon,
   Close as CloseIcon,
   Flash as BoltIcon,
-  Mic as MicIcon
+  Mic as MicIcon,
+  ArrowUp as ArrowUpIcon,
+  ArrowDown as ArrowDownIcon,
+  ChevronUp as ChevronUpIcon,
+  ChevronDown as ChevronDownIcon
 } from '@vicons/ionicons5'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { useSessionStore } from '@/stores/session'
@@ -874,6 +902,44 @@ function handleReconnect() {
 }
 
 /**
+ * Scroll terminal to top
+ */
+function scrollToTop() {
+  if (terminal) {
+    terminal.scrollToTop()
+  }
+}
+
+/**
+ * Scroll terminal to bottom
+ */
+function scrollToBottom() {
+  if (terminal) {
+    terminal.scrollToBottom()
+  }
+}
+
+/**
+ * Scroll terminal one page up
+ */
+function scrollPageUp() {
+  if (terminal) {
+    const rows = terminal.rows
+    terminal.scrollLines(-rows)
+  }
+}
+
+/**
+ * Scroll terminal one page down
+ */
+function scrollPageDown() {
+  if (terminal) {
+    const rows = terminal.rows
+    terminal.scrollLines(rows)
+  }
+}
+
+/**
  * Cleanup terminal
  */
 function cleanup() {
@@ -966,6 +1032,35 @@ onUnmounted(() => {
   padding: 8px;
   overflow: hidden;
   background: #1E1E1E;
+  position: relative;
+}
+
+/* Enable xterm.js scrollbar */
+:deep(.xterm) {
+  height: 100%;
+}
+
+:deep(.xterm-viewport) {
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: #555 #2B2B2B;
+}
+
+:deep(.xterm-viewport::-webkit-scrollbar) {
+  width: 8px;
+}
+
+:deep(.xterm-viewport::-webkit-scrollbar-track) {
+  background: #2B2B2B;
+}
+
+:deep(.xterm-viewport::-webkit-scrollbar-thumb) {
+  background-color: #555;
+  border-radius: 4px;
+}
+
+:deep(.xterm-viewport::-webkit-scrollbar-thumb:hover) {
+  background-color: #777;
 }
 
 .terminal-input {
@@ -1218,6 +1313,17 @@ onUnmounted(() => {
 
   .header-left h3 {
     font-size: 13px;
+  }
+
+  .header-right {
+    gap: 4px;
+  }
+
+  /* Make scroll buttons more prominent on mobile */
+  :deep(.n-button-group) {
+    .n-button {
+      padding: 0 8px;
+    }
   }
 
   .work-dir {

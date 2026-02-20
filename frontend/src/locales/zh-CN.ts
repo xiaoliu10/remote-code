@@ -140,7 +140,11 @@ export default {
     voiceError: '语音识别错误',
     voiceRecognized: '语音识别成功',
     voiceTimeout: '语音输入超时',
-    voiceStartFailed: '无法启动语音识别'
+    voiceStartFailed: '无法启动语音识别',
+    scrollToTop: '滚动到顶部',
+    scrollToBottom: '滚动到底部',
+    pageUp: '向上翻页',
+    pageDown: '向下翻页'
   },
   sessions: {
     selectSession: '请从左侧选择一个会话',

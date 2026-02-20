@@ -140,7 +140,11 @@ export default {
     voiceError: 'Voice recognition error',
     voiceRecognized: 'Voice recognized',
     voiceTimeout: 'Voice input timeout',
-    voiceStartFailed: 'Failed to start voice recognition'
+    voiceStartFailed: 'Failed to start voice recognition',
+    scrollToTop: 'Scroll to top',
+    scrollToBottom: 'Scroll to bottom',
+    pageUp: 'Page up',
+    pageDown: 'Page down'
   },
   sessions: {
     selectSession: 'Please select a session from the sidebar',
