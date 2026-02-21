@@ -146,7 +146,7 @@ export default {
     pageUp: 'Page up',
     pageDown: 'Page down',
     localScroll: 'Local scroll (browse history)',
-    remoteScroll: 'Remote scroll (send to terminal)'
+    remoteScroll: 'Remote scroll (click terminal then scroll)'
   },
   sessions: {
     selectSession: 'Please select a session from the sidebar',

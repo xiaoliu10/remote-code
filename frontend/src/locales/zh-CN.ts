@@ -146,7 +146,7 @@ export default {
     pageUp: '向上翻页',
     pageDown: '向下翻页',
     localScroll: '本地滚动（浏览历史）',
-    remoteScroll: '远程滚动（发送到终端）'
+    remoteScroll: '远程滚动（点击终端后滚动鼠标）'
   },
   sessions: {
     selectSession: '请从左侧选择一个会话',

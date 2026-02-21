@@ -79,7 +79,12 @@
     </div>
 
     <!-- Terminal Container -->
-    <div ref="terminalContainer" class="terminal-container" />
+    <div
+      ref="terminalContainer"
+      class="terminal-container"
+      :class="{ 'remote-scroll-mode': scrollMode === 'remote' }"
+      @click="focusTerminal"
+    />
 
     <!-- File Reference Popover (positioned over terminal) -->
     <div v-if="showFilePopover" class="file-popover-overlay">
@@ -637,6 +642,11 @@ function initTerminal() {
 
     if (!connected.value) return
 
+    // Focus terminal when scrolling in remote mode
+    if (terminal) {
+      terminal.focus()
+    }
+
     // Throttle scroll events
     const now = Date.now()
     if (now - lastScrollTime < scrollThrottle) return
@@ -650,6 +660,15 @@ function initTerminal() {
       sendKeys('\x1b[6~') // PageDown escape sequence
     }
   }, { passive: false })
+
+  // Auto-focus terminal when mouse enters (optional, for better UX)
+  terminalContainer.value.addEventListener('mouseenter', () => {
+    if (scrollMode.value === 'remote' && terminal) {
+      // Only auto-focus in remote scroll mode to avoid stealing focus from input
+      // Uncomment the next line if you want auto-focus on mouse enter
+      // terminal.focus()
+    }
+  })
 
   // Fit to container
   nextTick(() => {
@@ -985,6 +1004,20 @@ function scrollPageDown() {
 }
 
 /**
+ * Focus terminal - move focus from input to terminal
+ */
+function focusTerminal() {
+  if (terminal) {
+    terminal.focus()
+    // On mobile, blur any active input to close virtual keyboard
+    const activeElement = document.activeElement as HTMLElement
+    if (activeElement && activeElement.blur) {
+      activeElement.blur()
+    }
+  }
+}
+
+/**
  * Cleanup terminal
  */
 function cleanup() {
@@ -1080,6 +1113,23 @@ onUnmounted(() => {
   position: relative;
   display: flex;
   flex-direction: column;
+  cursor: text; /* Show text cursor to indicate terminal is clickable */
+  transition: box-shadow 0.2s;
+}
+
+/* Visual feedback when terminal is focused in remote mode */
+.terminal-container:focus-within {
+  box-shadow: inset 0 0 0 1px rgba(74, 156, 255, 0.3);
+}
+
+/* Stronger visual feedback when in remote scroll mode */
+.terminal-container.remote-scroll-mode {
+  box-shadow: inset 0 0 0 2px rgba(74, 156, 255, 0.4);
+  cursor: ns-resize; /* Show scroll cursor in remote mode */
+}
+
+.terminal-container.remote-scroll-mode:focus-within {
+  box-shadow: inset 0 0 0 2px rgba(74, 156, 255, 0.6);
 }
 
 /* Enable xterm.js scrollbar with prominent styling */
