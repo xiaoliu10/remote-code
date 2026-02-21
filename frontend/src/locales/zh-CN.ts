@@ -144,7 +144,9 @@ export default {
     scrollToTop: '滚动到顶部',
     scrollToBottom: '滚动到底部',
     pageUp: '向上翻页',
-    pageDown: '向下翻页'
+    pageDown: '向下翻页',
+    localScroll: '本地滚动（浏览历史）',
+    remoteScroll: '远程滚动（发送到终端）'
   },
   sessions: {
     selectSession: '请从左侧选择一个会话',

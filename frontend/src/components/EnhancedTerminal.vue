@@ -40,6 +40,18 @@
           </template>
         </n-button>
         <n-divider vertical />
+        <!-- Scroll mode toggle -->
+        <n-button
+          quaternary
+          size="small"
+          @click="scrollMode = scrollMode === 'local' ? 'remote' : 'local'"
+          :type="scrollMode === 'remote' ? 'primary' : 'default'"
+          :title="scrollMode === 'local' ? t('terminal.localScroll') : t('terminal.remoteScroll')"
+        >
+          <template #icon>
+            <n-icon><SwapVerticalIcon /></n-icon>
+          </template>
+        </n-button>
         <!-- Scroll controls -->
         <n-button-group size="small">
           <n-button quaternary size="small" @click="scrollToTop" title="Scroll to top">
@@ -279,7 +291,8 @@ import {
   ArrowUp as ArrowUpIcon,
   ArrowDown as ArrowDownIcon,
   ChevronUp as ChevronUpIcon,
-  ChevronDown as ChevronDownIcon
+  ChevronDown as ChevronDownIcon,
+  SwapVertical as SwapVerticalIcon
 } from '@vicons/ionicons5'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { useSessionStore } from '@/stores/session'
@@ -380,6 +393,9 @@ let searchAddon: SearchAddon | null = null
 // WebSocket connection
 const { connected, error, kicked, connect, disconnect, sendCommand, sendKeys, onMessage, onConnect, onDisconnect } =
   useWebSocket(props.sessionName)
+
+// Scroll mode: 'local' (scroll web view) or 'remote' (send to terminal)
+const scrollMode = ref<'local' | 'remote'>('local')
 
 /**
  * Handle special key selection
@@ -605,6 +621,35 @@ function initTerminal() {
 
   // Open terminal
   terminal.open(terminalContainer.value)
+
+  // Handle mouse wheel - send to remote terminal when in remote mode
+  let lastScrollTime = 0
+  const scrollThrottle = 100 // ms between scroll events
+
+  terminalContainer.value.addEventListener('wheel', (e: WheelEvent) => {
+    if (scrollMode.value !== 'remote') {
+      // Local mode: let the browser handle scrolling
+      return
+    }
+
+    // Remote mode: prevent default and send to terminal
+    e.preventDefault()
+
+    if (!connected.value) return
+
+    // Throttle scroll events
+    const now = Date.now()
+    if (now - lastScrollTime < scrollThrottle) return
+    lastScrollTime = now
+
+    if (e.deltaY < 0) {
+      // Scroll up - send PageUp
+      sendKeys('\x1b[5~') // PageUp escape sequence
+    } else {
+      // Scroll down - send PageDown
+      sendKeys('\x1b[6~') // PageDown escape sequence
+    }
+  }, { passive: false })
 
   // Fit to container
   nextTick(() => {

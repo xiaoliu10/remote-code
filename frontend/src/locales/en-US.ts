@@ -144,7 +144,9 @@ export default {
     scrollToTop: 'Scroll to top',
     scrollToBottom: 'Scroll to bottom',
     pageUp: 'Page up',
-    pageDown: 'Page down'
+    pageDown: 'Page down',
+    localScroll: 'Local scroll (browse history)',
+    remoteScroll: 'Remote scroll (send to terminal)'
   },
   sessions: {
     selectSession: 'Please select a session from the sidebar',
