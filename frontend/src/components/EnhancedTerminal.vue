@@ -82,7 +82,11 @@
     <div
       ref="terminalContainer"
       class="terminal-container"
-      :class="{ 'remote-scroll-mode': scrollMode === 'remote' }"
+      :class="{
+        'remote-scroll-mode': scrollMode === 'remote',
+        'terminal-focused': terminalFocused
+      }"
+      tabindex="0"
       @click="focusTerminal"
     />
 
@@ -402,6 +406,19 @@ const { connected, error, kicked, connect, disconnect, sendCommand, sendKeys, on
 // Scroll mode: 'local' (scroll web view) or 'remote' (send to terminal)
 const scrollMode = ref<'local' | 'remote'>('local')
 
+// Track if terminal is focused
+const terminalFocused = ref(false)
+
+// Watch scroll mode changes
+watch(scrollMode, (newMode) => {
+  if (newMode === 'remote') {
+    // Auto-focus terminal when switching to remote scroll mode
+    nextTick(() => {
+      focusTerminal()
+    })
+  }
+})
+
 /**
  * Handle special key selection
  */
@@ -626,6 +643,15 @@ function initTerminal() {
 
   // Open terminal
   terminal.open(terminalContainer.value)
+
+  // Track terminal focus state
+  terminal.onFocus(() => {
+    terminalFocused.value = true
+  })
+
+  terminal.onBlur(() => {
+    terminalFocused.value = false
+  })
 
   // Handle mouse wheel - send to remote terminal when in remote mode
   let lastScrollTime = 0
@@ -1006,13 +1032,26 @@ function scrollPageDown() {
 /**
  * Focus terminal - move focus from input to terminal
  */
-function focusTerminal() {
+function focusTerminal(event?: MouseEvent) {
+  // Prevent event from bubbling up
+  if (event) {
+    event.stopPropagation()
+  }
+
+  // First, blur any currently focused element (input field, etc)
+  const activeElement = document.activeElement as HTMLElement
+  if (activeElement && activeElement !== terminalContainer.value) {
+    activeElement.blur()
+  }
+
+  // Then focus the terminal
   if (terminal) {
+    // Focus the xterm.js internal textarea
     terminal.focus()
-    // On mobile, blur any active input to close virtual keyboard
-    const activeElement = document.activeElement as HTMLElement
-    if (activeElement && activeElement.blur) {
-      activeElement.blur()
+
+    // Also try to focus the container for good measure
+    if (terminalContainer.value) {
+      terminalContainer.value.focus()
     }
   }
 }
@@ -1126,6 +1165,11 @@ onUnmounted(() => {
 .terminal-container.remote-scroll-mode {
   box-shadow: inset 0 0 0 2px rgba(74, 156, 255, 0.4);
   cursor: ns-resize; /* Show scroll cursor in remote mode */
+}
+
+.terminal-container.remote-scroll-mode.terminal-focused {
+  box-shadow: inset 0 0 0 2px rgba(74, 156, 255, 0.8);
+  background: #1a1a2e; /* Slightly different background when focused */
 }
 
 .terminal-container.remote-scroll-mode:focus-within {
