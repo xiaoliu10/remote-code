@@ -644,14 +644,24 @@ function initTerminal() {
   // Open terminal
   terminal.open(terminalContainer.value)
 
-  // Track terminal focus state
-  terminal.onFocus(() => {
-    terminalFocused.value = true
-  })
-
-  terminal.onBlur(() => {
-    terminalFocused.value = false
-  })
+  // Track terminal focus state using xterm events
+  // Note: xterm.js uses 'on' method for events in v6
+  try {
+    terminal.on('focus', () => {
+      terminalFocused.value = true
+    })
+    terminal.on('blur', () => {
+      terminalFocused.value = false
+    })
+  } catch (e) {
+    // Fallback: use container focus events if xterm events not available
+    terminalContainer.value?.addEventListener('focusin', () => {
+      terminalFocused.value = true
+    })
+    terminalContainer.value?.addEventListener('focusout', () => {
+      terminalFocused.value = false
+    })
+  }
 
   // Handle mouse wheel - send to remote terminal when in remote mode
   let lastScrollTime = 0
