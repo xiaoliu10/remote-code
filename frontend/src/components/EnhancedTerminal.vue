@@ -333,6 +333,9 @@ const workDir = computed(() => {
 // Refs
 const terminalContainer = ref<HTMLElement>()
 const commandInputRef = ref<InstanceType<typeof NInput>>()
+
+// Tmux copy mode state (shared across functions)
+let inTmuxCopyMode = false
 const currentCommand = ref('')
 const commandHistory = ref<string[]>([])
 const historyIndex = ref(-1)
@@ -410,12 +413,16 @@ const scrollMode = ref<'local' | 'remote'>('local')
 const terminalFocused = ref(false)
 
 // Watch scroll mode changes
-watch(scrollMode, (newMode) => {
+watch(scrollMode, (newMode, oldMode) => {
   if (newMode === 'remote') {
     // Auto-focus terminal when switching to remote scroll mode
     nextTick(() => {
       focusTerminal()
     })
+  } else if (oldMode === 'remote' && inTmuxCopyMode) {
+    // Exit tmux copy mode when switching back to local mode
+    sendKeys('q')
+    inTmuxCopyMode = false
   }
 })
 
@@ -652,6 +659,11 @@ function initTerminal() {
     })
     terminal.on('blur', () => {
       terminalFocused.value = false
+      // Exit tmux copy mode when terminal loses focus
+      if (inTmuxCopyMode) {
+        sendKeys('q')
+        inTmuxCopyMode = false
+      }
     })
   } catch (e) {
     // Fallback: use container focus events if xterm events not available
@@ -660,12 +672,19 @@ function initTerminal() {
     })
     terminalContainer.value?.addEventListener('focusout', () => {
       terminalFocused.value = false
+      // Exit tmux copy mode when terminal loses focus
+      if (inTmuxCopyMode) {
+        sendKeys('q')
+        inTmuxCopyMode = false
+      }
     })
   }
 
   // Handle mouse wheel - send to remote terminal when in remote mode
+  // Uses tmux copy mode for proper scrolling
+  let scrollTimeout: number | null = null
   let lastScrollTime = 0
-  const scrollThrottle = 100 // ms between scroll events
+  const scrollThrottle = 50 // ms between scroll events
 
   terminalContainer.value.addEventListener('wheel', (e: WheelEvent) => {
     if (scrollMode.value !== 'remote') {
@@ -688,12 +707,51 @@ function initTerminal() {
     if (now - lastScrollTime < scrollThrottle) return
     lastScrollTime = now
 
+    // Clear auto-exit timeout
+    if (scrollTimeout) {
+      clearTimeout(scrollTimeout)
+    }
+
+    // Auto-exit tmux copy mode after 3 seconds of no scrolling
+    scrollTimeout = window.setTimeout(() => {
+      if (inTmuxCopyMode) {
+        sendKeys('q') // Exit tmux copy mode
+        inTmuxCopyMode = false
+      }
+    }, 3000)
+
     if (e.deltaY < 0) {
-      // Scroll up - send PageUp
-      sendKeys('\x1b[5~') // PageUp escape sequence
+      // Scroll up
+      if (!inTmuxCopyMode) {
+        // Enter tmux copy mode: Ctrl+B [
+        sendKeys('\x02[') // Ctrl+B followed by [
+        inTmuxCopyMode = true
+        // Wait a bit before sending scroll command
+        setTimeout(() => {
+          // Send multiple up arrows based on scroll amount
+          const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 50), 5)
+          for (let i = 0; i < scrollAmount; i++) {
+            sendKeys('\x1b[A') // Up arrow
+          }
+        }, 100)
+      } else {
+        // Already in copy mode, just scroll
+        const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 50), 5)
+        for (let i = 0; i < scrollAmount; i++) {
+          sendKeys('\x1b[A') // Up arrow
+        }
+      }
     } else {
-      // Scroll down - send PageDown
-      sendKeys('\x1b[6~') // PageDown escape sequence
+      // Scroll down
+      if (inTmuxCopyMode) {
+        const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 50), 5)
+        for (let i = 0; i < scrollAmount; i++) {
+          sendKeys('\x1b[B') // Down arrow
+        }
+      } else {
+        // Not in copy mode, just send PageDown to shell
+        sendKeys('\x1b[6~') // PageDown
+      }
     }
   }, { passive: false })
 
