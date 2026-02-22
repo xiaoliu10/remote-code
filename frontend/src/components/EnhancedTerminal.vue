@@ -628,7 +628,7 @@ function initTerminal() {
       brightCyan: '#29b8db',
       brightWhite: '#e5e5e5'
     },
-    scrollback: 10000,
+    scrollback: 50000, // Increased from 10000 to 50000 for much longer scroll history
     allowProposedApi: true
   })
 
@@ -1206,7 +1206,7 @@ onUnmounted(() => {
 
 /* Webkit scrollbar (Chrome, Safari, Edge) */
 :deep(.xterm-viewport::-webkit-scrollbar) {
-  width: 16px;
+  width: 18px; /* Increased from 16px to 18px */
   background: #1E1E1E;
 }
 
@@ -1219,7 +1219,7 @@ onUnmounted(() => {
   background: linear-gradient(180deg, #4A9CFF 0%, #667eea 100%);
   border-radius: 0;
   border: 3px solid #2B2B2B;
-  min-height: 60px;
+  min-height: 100px; /* Increased from 60px to 100px for easier dragging */
   box-shadow: 0 0 4px rgba(74, 156, 255, 0.5);
 }
 
