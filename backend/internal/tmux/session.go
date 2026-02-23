@@ -154,12 +154,13 @@ func (m *Manager) DeleteSession(name string) error {
 	return nil
 }
 
-// CaptureOutput 捕获会话输出
+// CaptureOutput 捕获会话输出（包括历史缓冲区）
 func (s *Session) CaptureOutput() (string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	cmd := exec.Command("tmux", "capture-pane", "-t", s.Name, "-p", "-e")
+	// Capture visible area plus history (up to 5000 lines back)
+	cmd := exec.Command("tmux", "capture-pane", "-t", s.Name, "-p", "-e", "-S", "-5000")
 	output, err := cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to capture output: %w", err)
