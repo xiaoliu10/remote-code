@@ -433,6 +433,8 @@ watch(scrollMode, (newMode, oldMode) => {
     nextTick(() => {
       focusTerminal()
     })
+    // Note: With tmux mouse mode enabled, scrolling works automatically
+    // No need to manually enter/exit copy mode for mouse wheel
   } else if (oldMode === 'remote' && inTmuxCopyMode.value) {
     // Exit tmux copy mode when switching back to local mode
     exitCopyMode()
@@ -687,80 +689,19 @@ function initTerminal() {
     })
   }
 
-  // Handle mouse wheel - send to remote terminal when in remote mode
-  // Uses tmux copy mode for proper scrolling
-  let scrollTimeout: number | null = null
-  let lastScrollTime = 0
-  const scrollThrottle = 50 // ms between scroll events
-
+  // Handle mouse wheel - let tmux handle it natively with mouse mode enabled
+  // Don't intercept wheel events - let them pass through to tmux
+  // Tmux's mouse mode will automatically enter copy-mode and scroll
   terminalContainer.value.addEventListener('wheel', (e: WheelEvent) => {
-    if (scrollMode.value !== 'remote') {
-      // Local mode: let the browser handle scrolling
+    // Don't intercept wheel events when in remote mode
+    // Let tmux's mouse mode handle scrolling natively
+    if (scrollMode.value === 'remote') {
+      // Don't prevent default - let the event pass through to tmux
+      // This allows tmux's mouse mode to work properly
       return
     }
-
-    // Remote mode: prevent default and send to terminal
-    e.preventDefault()
-
-    if (!connected.value) return
-
-    // Focus terminal when scrolling in remote mode
-    if (terminal) {
-      terminal.focus()
-    }
-
-    // Throttle scroll events
-    const now = Date.now()
-    if (now - lastScrollTime < scrollThrottle) return
-    lastScrollTime = now
-
-    // Clear auto-exit timeout
-    if (scrollTimeout) {
-      clearTimeout(scrollTimeout)
-    }
-
-    // Auto-exit tmux copy mode after 3 seconds of no scrolling
-    scrollTimeout = window.setTimeout(() => {
-      if (inTmuxCopyMode.value) {
-        exitCopyMode()
-        inTmuxCopyMode.value = false
-      }
-    }, 3000)
-
-    if (e.deltaY < 0) {
-      // Scroll up
-      if (!inTmuxCopyMode.value) {
-        // Enter tmux copy mode using dedicated API
-        enterCopyMode()
-        inTmuxCopyMode.value = true
-        // Wait a bit before sending scroll command
-        setTimeout(() => {
-          // Send multiple up arrows based on scroll amount
-          const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 3)
-          for (let i = 0; i < scrollAmount; i++) {
-            sendKeys('\x1b[A') // Up arrow
-          }
-        }, 150)
-      } else {
-        // Already in copy mode, just scroll
-        const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 3)
-        for (let i = 0; i < scrollAmount; i++) {
-          sendKeys('\x1b[A') // Up arrow
-        }
-      }
-    } else {
-      // Scroll down
-      if (inTmuxCopyMode.value) {
-        const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 3)
-        for (let i = 0; i < scrollAmount; i++) {
-          sendKeys('\x1b[B') // Down arrow
-        }
-      } else {
-        // Not in copy mode, just send PageDown to shell
-        sendKeys('\x1b[6~') // PageDown
-      }
-    }
-  }, { passive: false })
+    // In local mode, let browser handle scrolling normally
+  }, { passive: true })
 
   // Auto-focus terminal when mouse enters (optional, for better UX)
   terminalContainer.value.addEventListener('mouseenter', () => {
@@ -1149,6 +1090,8 @@ function focusTerminal(event?: MouseEvent) {
 
 /**
  * Manually enter tmux copy mode
+ * Note: With tmux mouse mode enabled, this is mainly for keyboard navigation
+ * Mouse wheel scrolling is handled automatically by tmux
  */
 function enterTmuxCopyMode() {
   if (!connected.value) return
@@ -1166,6 +1109,7 @@ function enterTmuxCopyMode() {
     })
   } else {
     // Enter copy mode using dedicated API
+    // This is for manual keyboard navigation
     enterCopyMode()
     inTmuxCopyMode.value = true
     message.info(t('terminal.copyModeHint'))
