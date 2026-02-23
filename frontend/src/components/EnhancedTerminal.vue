@@ -673,11 +673,8 @@ function initTerminal() {
     })
     terminal.on('blur', () => {
       terminalFocused.value = false
-      // Exit tmux copy mode when terminal loses focus
-      if (inTmuxCopyMode.value) {
-        exitCopyMode()
-        inTmuxCopyMode.value = false
-      }
+      // Don't exit copy mode on blur - let user control it manually
+      // This prevents immediate exit when clicking buttons
     })
   } catch (e) {
     // Fallback: use container focus events if xterm events not available
@@ -686,11 +683,7 @@ function initTerminal() {
     })
     terminalContainer.value?.addEventListener('focusout', () => {
       terminalFocused.value = false
-      // Exit tmux copy mode when terminal loses focus
-      if (inTmuxCopyMode.value) {
-        exitCopyMode()
-        inTmuxCopyMode.value = false
-      }
+      // Don't exit copy mode on blur - let user control it manually
     })
   }
 
@@ -1167,17 +1160,19 @@ function enterTmuxCopyMode() {
     message.info(t('terminal.exitCopyMode'))
     // Re-focus input when exiting copy mode
     nextTick(() => {
-      commandInputRef?.focus()
+      if (commandInputRef) {
+        commandInputRef.focus()
+      }
     })
   } else {
     // Enter copy mode using dedicated API
     enterCopyMode()
     inTmuxCopyMode.value = true
     message.info(t('terminal.copyModeHint'))
-    // Disable input and focus terminal
-    nextTick(() => {
+    // Focus terminal after a delay to avoid blur event
+    setTimeout(() => {
       focusTerminal()
-    })
+    }, 200)
   }
 }
 
