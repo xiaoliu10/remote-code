@@ -141,7 +141,7 @@ export default {
     voiceRecognized: '语音识别成功',
     voiceTimeout: '语音输入超时',
     voiceStartFailed: '无法启动语音识别',
-    tmuxPrefix: '已进入/退出 tmux 滚动模式',
+    tmuxPrefix: '已进入/退出 tmux 滚动模式 (Ctrl+B 或 ⌘+B)',
     scrollToTop: '滚动到顶部',
     scrollToBottom: '滚动到底部',
     pageUp: '向上翻页',

@@ -697,12 +697,17 @@ function initTerminal() {
   let scrollTimeout: number | null = null
 
   terminalContainer.value.addEventListener('wheel', (e: WheelEvent) => {
+    console.log('[Scroll] Wheel event triggered, scrollMode:', scrollMode.value, 'remote:', scrollMode.value === 'remote')
+
     if (scrollMode.value !== 'remote') {
       // Local mode: let the browser handle scrolling
       return
     }
 
-    if (!connected.value) return
+    if (!connected.value) {
+      console.log('[Scroll] Not connected')
+      return
+    }
 
     // Focus terminal when scrolling
     if (terminal) {
@@ -717,6 +722,7 @@ function initTerminal() {
     // Auto-exit copy mode after 2 seconds of no scrolling
     scrollTimeout = window.setTimeout(() => {
       if (inTmuxCopyMode.value) {
+        console.log('[Scroll] Auto-exit copy mode')
         exitCopyMode()
         inTmuxCopyMode.value = false
       }
@@ -724,26 +730,28 @@ function initTerminal() {
 
     // Enter copy mode if not already in it
     if (!inTmuxCopyMode.value) {
+      console.log('[Scroll] Entering copy mode')
       enterCopyMode()
       inTmuxCopyMode.value = true
     }
 
-    // Send scroll commands after a small delay to ensure copy mode is active
+    // Send scroll commands after a delay to ensure copy mode is active
     setTimeout(() => {
+      const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 5)
+      console.log('[Scroll] Sending keys, amount:', scrollAmount, 'direction:', e.deltaY < 0 ? 'up' : 'down')
+
       if (e.deltaY < 0) {
-        // Scroll up - send Up arrow multiple times based on scroll amount
-        const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 5)
+        // Scroll up
         for (let i = 0; i < scrollAmount; i++) {
           sendKeys('\x1b[A') // Up arrow
         }
       } else {
-        // Scroll down - send Down arrow
-        const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 5)
+        // Scroll down
         for (let i = 0; i < scrollAmount; i++) {
           sendKeys('\x1b[B') // Down arrow
         }
       }
-    }, 50)
+    }, 200) // Increased from 50ms to 200ms
   }, { passive: false })
 
   // Auto-focus terminal when mouse enters (optional, for better UX)
@@ -814,8 +822,8 @@ function initTerminal() {
  * Handle keyboard events in command input
  */
 function handleKeyDown(e: KeyboardEvent) {
-  // Handle Ctrl+B for entering tmux copy mode directly
-  if (e.key === 'b' && e.ctrlKey) {
+  // Handle Ctrl+B (Windows/Linux) or Cmd+B (Mac) for entering tmux copy mode
+  if (e.key === 'b' && (e.ctrlKey || e.metaKey)) {
     e.preventDefault()
     enterTmuxCopyMode()
     return
@@ -834,14 +842,14 @@ function handleKeyDown(e: KeyboardEvent) {
       navigateHistory(1)
       break
     case 'c':
-      if (e.ctrlKey) {
-        // Clear current command
+      if (e.ctrlKey || e.metaKey) {
+        // Clear current command (Ctrl+C or Cmd+C)
         currentCommand.value = ''
       }
       break
     case 'l':
-      if (e.ctrlKey) {
-        // Clear terminal
+      if (e.ctrlKey || e.metaKey) {
+        // Clear terminal (Ctrl+L or Cmd+L)
         e.preventDefault()
         handleClear()
       }

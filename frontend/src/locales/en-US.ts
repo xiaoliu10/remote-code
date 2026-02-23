@@ -141,7 +141,7 @@ export default {
     voiceRecognized: 'Voice recognized',
     voiceTimeout: 'Voice input timeout',
     voiceStartFailed: 'Failed to start voice recognition',
-    tmuxPrefix: 'Entered/exited tmux scroll mode',
+    tmuxPrefix: 'Entered/exited tmux scroll mode (Ctrl+B or ⌘+B)',
     scrollToTop: 'Scroll to top',
     scrollToBottom: 'Scroll to bottom',
     pageUp: 'Page up',
