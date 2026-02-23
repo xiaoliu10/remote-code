@@ -227,6 +227,30 @@ func (h *WebSocketHandler) handleClientMessage(client *websocket.Client, session
 			h.hub.SendToSession(session.Name, "status", "Exited copy mode")
 		}
 
+	case "scroll_up":
+		// 在 copy mode 中向上滚动
+		lines, _ := msg["lines"].(float64)
+		if lines == 0 {
+			lines = 1
+		}
+		log.Printf("[WS] Scrolling up %.0f lines in copy mode for session %s", lines, session.Name)
+		if err := session.ScrollUp(int(lines)); err != nil {
+			log.Printf("[WS] Failed to scroll up: %v", err)
+			h.hub.SendToSession(session.Name, "error", "Failed to scroll up")
+		}
+
+	case "scroll_down":
+		// 在 copy mode 中向下滚动
+		lines, _ := msg["lines"].(float64)
+		if lines == 0 {
+			lines = 1
+		}
+		log.Printf("[WS] Scrolling down %.0f lines in copy mode for session %s", lines, session.Name)
+		if err := session.ScrollDown(int(lines)); err != nil {
+			log.Printf("[WS] Failed to scroll down: %v", err)
+			h.hub.SendToSession(session.Name, "error", "Failed to scroll down")
+		}
+
 	case "resize":
 		// 处理终端大小调整（暂未实现）
 		log.Printf("[WS] Resize requested: %+v", msg)

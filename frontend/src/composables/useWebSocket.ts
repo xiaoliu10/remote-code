@@ -159,6 +159,14 @@ export function useWebSocket(sessionName: string) {
     send('exit_copy_mode', null)
   }
 
+  const scrollUp = (lines: number = 1) => {
+    send('scroll_up', { lines })
+  }
+
+  const scrollDown = (lines: number = 1) => {
+    send('scroll_down', { lines })
+  }
+
   const onMessage = (handler: MessageHandler) => {
     messageHandlers.push(handler)
   }
@@ -187,6 +195,8 @@ export function useWebSocket(sessionName: string) {
     sendKeys,
     enterCopyMode,
     exitCopyMode,
+    scrollUp,
+    scrollDown,
     onMessage,
     onConnect,
     onDisconnect

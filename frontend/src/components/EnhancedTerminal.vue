@@ -166,7 +166,8 @@
               <button class="key-btn danger" @click="handleSpecialKey('c-c')">Ctrl+C</button>
               <button class="key-btn" @click="handleSpecialKey('c-l')">Ctrl+L</button>
               <button class="key-btn" @click="handleSpecialKey('c-d')">Ctrl+D</button>
-              <button class="key-btn primary" @click="handleSpecialKey('tmux-copy')">滚动</button>
+              <button v-if="!inTmuxCopyMode" class="key-btn primary" @click="handleSpecialKey('tmux-copy')">滚动</button>
+              <button v-else class="key-btn warning" @click="handleSpecialKey('exit-copy-mode')">退出滚动</button>
             </div>
           </div>
 
@@ -175,12 +176,12 @@
             <div class="arrow-spacer"></div>
             <div class="arrow-row">
               <div class="arrow-placeholder"></div>
-              <button class="key-btn arrow" @click="handleSpecialKey('arrow-up')">↑</button>
+              <button class="key-btn arrow" :class="{ 'primary': inTmuxCopyMode }" @click="inTmuxCopyMode ? handleSpecialKey('scroll-up') : handleSpecialKey('arrow-up')">↑</button>
               <div class="arrow-placeholder"></div>
             </div>
             <div class="arrow-row">
               <button class="key-btn arrow" @click="handleSpecialKey('arrow-left')">←</button>
-              <button class="key-btn arrow" @click="handleSpecialKey('arrow-down')">↓</button>
+              <button class="key-btn arrow" :class="{ 'primary': inTmuxCopyMode }" @click="inTmuxCopyMode ? handleSpecialKey('scroll-down') : handleSpecialKey('arrow-down')">↓</button>
               <button class="key-btn arrow" @click="handleSpecialKey('arrow-right')">→</button>
             </div>
           </div>
@@ -423,7 +424,7 @@ let fitAddon: FitAddon | null = null
 let searchAddon: SearchAddon | null = null
 
 // WebSocket connection
-const { connected, error, kicked, connect, disconnect, sendCommand, sendKeys, enterCopyMode, exitCopyMode, onMessage, onConnect, onDisconnect } =
+const { connected, error, kicked, connect, disconnect, sendCommand, sendKeys, enterCopyMode, exitCopyMode, scrollUp, scrollDown, onMessage, onConnect, onDisconnect } =
   useWebSocket(props.sessionName)
 
 // Scroll mode: 'local' (scroll web view) or 'remote' (send to terminal)
@@ -474,13 +475,29 @@ function handleSpecialKey(key: string) {
     return
   }
 
-  // Handle tmux copy mode (Ctrl+B [)
+  // Handle tmux copy mode - use tmux copy-mode command
   if (key === 'tmux-copy') {
-    sendKeys('\x02') // Send Ctrl+B
-    setTimeout(() => {
-      sendKeys('[') // Send [
-    }, 50)
-    message.info(t('terminal.tmuxCopyMode'))
+    enterCopyMode()
+    inTmuxCopyMode.value = true
+    message.info('进入tmux滚动模式，用方向键滚动，点击退出按钮退出')
+    return
+  }
+
+  // Handle scroll in copy mode
+  if (key === 'scroll-up') {
+    scrollUp(1)
+    return
+  }
+
+  if (key === 'scroll-down') {
+    scrollDown(1)
+    return
+  }
+
+  if (key === 'exit-copy-mode') {
+    exitCopyMode()
+    inTmuxCopyMode.value = false
+    message.info('退出tmux滚动模式')
     return
   }
 
@@ -708,12 +725,11 @@ function initTerminal() {
   }
 
   // Handle mouse wheel for tmux scrolling
-  // Since xterm.js in browser doesn't pass mouse events to tmux,
-  // we need to manually send scroll commands
+  // Use tmux copy-mode command for proper scrolling
   let scrollTimeout: number | null = null
 
   terminalContainer.value.addEventListener('wheel', (e: WheelEvent) => {
-    console.log('[Scroll] Wheel event triggered, scrollMode:', scrollMode.value, 'remote:', scrollMode.value === 'remote')
+    console.log('[Scroll] Wheel event, scrollMode:', scrollMode.value)
 
     if (scrollMode.value !== 'remote') {
       // Local mode: let the browser handle scrolling
@@ -746,28 +762,24 @@ function initTerminal() {
 
     // Enter copy mode if not already in it
     if (!inTmuxCopyMode.value) {
-      console.log('[Scroll] Entering copy mode')
+      console.log('[Scroll] Entering copy mode via tmux command')
       enterCopyMode()
       inTmuxCopyMode.value = true
     }
 
-    // Send scroll commands after a delay to ensure copy mode is active
+    // Send scroll commands using tmux scroll commands
     setTimeout(() => {
       const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 5)
-      console.log('[Scroll] Sending keys, amount:', scrollAmount, 'direction:', e.deltaY < 0 ? 'up' : 'down')
+      console.log('[Scroll] Scrolling, amount:', scrollAmount, 'direction:', e.deltaY < 0 ? 'up' : 'down')
 
       if (e.deltaY < 0) {
         // Scroll up
-        for (let i = 0; i < scrollAmount; i++) {
-          sendKeys('\x1b[A') // Up arrow
-        }
+        scrollUp(scrollAmount)
       } else {
         // Scroll down
-        for (let i = 0; i < scrollAmount; i++) {
-          sendKeys('\x1b[B') // Down arrow
-        }
+        scrollDown(scrollAmount)
       }
-    }, 200) // Increased from 50ms to 200ms
+    }, 200)
   }, { passive: false })
 
   // Auto-focus terminal when mouse enters (optional, for better UX)
@@ -838,15 +850,18 @@ function initTerminal() {
  * Handle keyboard events in command input
  */
 function handleKeyDown(e: KeyboardEvent) {
-  // Handle Ctrl+B for sending tmux prefix (all platforms)
+  // Handle Ctrl+B for tmux copy mode (all platforms)
   if (e.key === 'b' && e.ctrlKey) {
     e.preventDefault()
-    // Send tmux prefix key (Ctrl+B) then copy mode command ([)
-    sendKeys('\x02') // Send Ctrl+B (tmux prefix)
-    setTimeout(() => {
-      sendKeys('[') // Send [ to enter copy mode
-    }, 50)
-    message.info(t('terminal.tmuxCopyMode'))
+    if (!inTmuxCopyMode.value) {
+      enterCopyMode()
+      inTmuxCopyMode.value = true
+      message.info('进入tmux滚动模式，用方向键滚动，点击退出按钮退出')
+    } else {
+      exitCopyMode()
+      inTmuxCopyMode.value = false
+      message.info('退出tmux滚动模式')
+    }
     return
   }
 
@@ -855,12 +870,22 @@ function handleKeyDown(e: KeyboardEvent) {
       sendCurrentCommand()
       break
     case 'ArrowUp':
-      e.preventDefault()
-      navigateHistory(-1)
+      if (inTmuxCopyMode.value) {
+        e.preventDefault()
+        scrollUp(1)
+      } else {
+        e.preventDefault()
+        navigateHistory(-1)
+      }
       break
     case 'ArrowDown':
-      e.preventDefault()
-      navigateHistory(1)
+      if (inTmuxCopyMode.value) {
+        e.preventDefault()
+        scrollDown(1)
+      } else {
+        e.preventDefault()
+        navigateHistory(1)
+      }
       break
     case 'c':
       if (e.ctrlKey) {

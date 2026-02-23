@@ -185,24 +185,61 @@ func (s *Session) EnterCopyMode() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// First check current mode
-	checkCmd := exec.Command("tmux", "display-message", "-t", s.Name, "-p", "#{pane_mode}")
-	output, _ := checkCmd.Output()
-	currentMode := string(output)
-
-	log.Printf("[Tmux] Current mode before entering copy mode: %s", currentMode)
-
 	// Use tmux command to enter copy mode directly
 	cmd := exec.Command("tmux", "copy-mode", "-t", s.Name)
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to enter copy mode: %w", err)
 	}
 
-	// Verify we're now in copy mode
-	verifyCmd := exec.Command("tmux", "display-message", "-t", s.Name, "-p", "#{pane_mode}")
-	verifyOutput, _ := verifyCmd.Output()
-	newMode := string(verifyOutput)
-	log.Printf("[Tmux] Mode after entering copy mode: %s", newMode)
+	log.Printf("[Tmux] Entered copy mode for session %s", s.Name)
+	return nil
+}
+
+// ExitCopyMode 退出 tmux copy mode
+func (s *Session) ExitCopyMode() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Use tmux command to exit copy mode
+	cmd := exec.Command("tmux", "send-keys", "-t", s.Name, "-X", "cancel")
+	if err := cmd.Run(); err != nil {
+		// Fallback: send q key
+		cmd = exec.Command("tmux", "send-keys", "-t", s.Name, "q")
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to exit copy mode: %w", err)
+		}
+	}
+
+	log.Printf("[Tmux] Exited copy mode for session %s", s.Name)
+	return nil
+}
+
+// ScrollUp 在 copy mode 中向上滚动
+func (s *Session) ScrollUp(lines int) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for i := 0; i < lines; i++ {
+		cmd := exec.Command("tmux", "send-keys", "-t", s.Name, "-X", "cursor-up")
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to scroll up: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// ScrollDown 在 copy mode 中向下滚动
+func (s *Session) ScrollDown(lines int) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for i := 0; i < lines; i++ {
+		cmd := exec.Command("tmux", "send-keys", "-t", s.Name, "-X", "cursor-down")
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to scroll down: %w", err)
+		}
+	}
 
 	return nil
 }
