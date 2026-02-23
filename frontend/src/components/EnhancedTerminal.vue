@@ -417,7 +417,7 @@ let fitAddon: FitAddon | null = null
 let searchAddon: SearchAddon | null = null
 
 // WebSocket connection
-const { connected, error, kicked, connect, disconnect, sendCommand, sendKeys, onMessage, onConnect, onDisconnect } =
+const { connected, error, kicked, connect, disconnect, sendCommand, sendKeys, enterCopyMode, exitCopyMode, onMessage, onConnect, onDisconnect } =
   useWebSocket(props.sessionName)
 
 // Scroll mode: 'local' (scroll web view) or 'remote' (send to terminal)
@@ -729,7 +729,7 @@ function initTerminal() {
     // Auto-exit tmux copy mode after 3 seconds of no scrolling
     scrollTimeout = window.setTimeout(() => {
       if (inTmuxCopyMode) {
-        sendKeys('q') // Exit tmux copy mode
+        exitCopyMode()
         inTmuxCopyMode = false
       }
     }, 3000)
@@ -737,22 +737,17 @@ function initTerminal() {
     if (e.deltaY < 0) {
       // Scroll up
       if (!inTmuxCopyMode) {
-        // Enter tmux copy mode: Ctrl+B [
-        // Send Ctrl+B first
-        sendKeys('\x02') // Ctrl+B
-        // Then send [ separately after a delay
+        // Enter tmux copy mode using dedicated API
+        enterCopyMode()
+        inTmuxCopyMode = true
+        // Wait a bit before sending scroll command
         setTimeout(() => {
-          sendKeys('[')
-          inTmuxCopyMode = true
-          // Wait a bit more before sending scroll command
-          setTimeout(() => {
-            // Send multiple up arrows based on scroll amount
-            const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 3)
-            for (let i = 0; i < scrollAmount; i++) {
-              sendKeys('\x1b[A') // Up arrow
-            }
-          }, 150)
-        }, 100)
+          // Send multiple up arrows based on scroll amount
+          const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 3)
+          for (let i = 0; i < scrollAmount; i++) {
+            sendKeys('\x1b[A') // Up arrow
+          }
+        }, 150)
       } else {
         // Already in copy mode, just scroll
         const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 3)
@@ -1154,21 +1149,18 @@ function enterTmuxCopyMode() {
 
   if (inTmuxCopyMode) {
     // Already in copy mode, exit instead
-    sendKeys('q')
+    exitCopyMode()
     inTmuxCopyMode = false
     message.info(t('terminal.exitCopyMode'))
   } else {
-    // Enter copy mode
-    sendKeys('\x02') // Ctrl+B
-    setTimeout(() => {
-      sendKeys('[')
-      inTmuxCopyMode = true
-      message.info(t('terminal.copyModeHint'))
-      // Ensure terminal has focus after entering copy mode
-      nextTick(() => {
-        focusTerminal()
-      })
-    }, 100)
+    // Enter copy mode using dedicated API
+    enterCopyMode()
+    inTmuxCopyMode = true
+    message.info(t('terminal.copyModeHint'))
+    // Ensure terminal has focus after entering copy mode
+    nextTick(() => {
+      focusTerminal()
+    })
   }
 }
 

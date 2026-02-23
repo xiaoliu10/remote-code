@@ -151,6 +151,14 @@ export function useWebSocket(sessionName: string) {
     send('keys', keys)
   }
 
+  const enterCopyMode = () => {
+    send('enter_copy_mode', null)
+  }
+
+  const exitCopyMode = () => {
+    send('exit_copy_mode', null)
+  }
+
   const onMessage = (handler: MessageHandler) => {
     messageHandlers.push(handler)
   }
@@ -177,6 +185,8 @@ export function useWebSocket(sessionName: string) {
     send,
     sendCommand,
     sendKeys,
+    enterCopyMode,
+    exitCopyMode,
     onMessage,
     onConnect,
     onDisconnect

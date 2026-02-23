@@ -205,6 +205,28 @@ func (h *WebSocketHandler) handleClientMessage(client *websocket.Client, session
 			}
 		}
 
+	case "enter_copy_mode":
+		// 进入 tmux copy mode
+		log.Printf("[WS] Entering copy mode for session %s", session.Name)
+		if err := session.EnterCopyMode(); err != nil {
+			log.Printf("[WS] Failed to enter copy mode: %v", err)
+			h.hub.SendToSession(session.Name, "error", "Failed to enter copy mode")
+		} else {
+			log.Printf("[WS] Entered copy mode successfully")
+			h.hub.SendToSession(session.Name, "status", "Entered copy mode")
+		}
+
+	case "exit_copy_mode":
+		// 退出 tmux copy mode
+		log.Printf("[WS] Exiting copy mode for session %s", session.Name)
+		if err := session.ExitCopyMode(); err != nil {
+			log.Printf("[WS] Failed to exit copy mode: %v", err)
+			h.hub.SendToSession(session.Name, "error", "Failed to exit copy mode")
+		} else {
+			log.Printf("[WS] Exited copy mode successfully")
+			h.hub.SendToSession(session.Name, "status", "Exited copy mode")
+		}
+
 	case "resize":
 		// 处理终端大小调整（暂未实现）
 		log.Printf("[WS] Resize requested: %+v", msg)

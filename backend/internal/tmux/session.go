@@ -180,6 +180,38 @@ func (s *Session) SendKeys(keys string) error {
 	return nil
 }
 
+// EnterCopyMode 进入 tmux copy mode
+func (s *Session) EnterCopyMode() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Use tmux command to enter copy mode directly
+	cmd := exec.Command("tmux", "copy-mode", "-t", s.Name)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to enter copy mode: %w", err)
+	}
+
+	return nil
+}
+
+// ExitCopyMode 退出 tmux copy mode
+func (s *Session) ExitCopyMode() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Use tmux command to exit copy mode
+	cmd := exec.Command("tmux", "send-keys", "-t", s.Name, "-X", "cancel")
+	if err := cmd.Run(); err != nil {
+		// Fallback: send q key
+		cmd = exec.Command("tmux", "send-keys", "-t", s.Name, "q")
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to exit copy mode: %w", err)
+		}
+	}
+
+	return nil
+}
+
 // SendCommand 发送命令（带 Enter）
 func (s *Session) SendCommand(cmd string) error {
 	s.mu.Lock()
