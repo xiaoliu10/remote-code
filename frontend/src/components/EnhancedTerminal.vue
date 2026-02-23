@@ -52,6 +52,20 @@
             <n-icon><SwapVerticalIcon /></n-icon>
           </template>
         </n-button>
+        <!-- Manual tmux copy mode controls (show in remote mode) -->
+        <template v-if="scrollMode === 'remote'">
+          <n-button
+            quaternary
+            size="small"
+            @click="enterTmuxCopyMode"
+            :type="inTmuxCopyMode ? 'success' : 'default'"
+            :title="inTmuxCopyMode ? t('terminal.exitCopyMode') : t('terminal.enterCopyMode')"
+          >
+            <template #icon>
+              <n-icon><DocumentIcon /></n-icon>
+            </template>
+          </n-button>
+        </template>
         <!-- Scroll controls -->
         <n-button-group size="small">
           <n-button quaternary size="small" @click="scrollToTop" title="Scroll to top">
@@ -724,19 +738,24 @@ function initTerminal() {
       // Scroll up
       if (!inTmuxCopyMode) {
         // Enter tmux copy mode: Ctrl+B [
-        sendKeys('\x02[') // Ctrl+B followed by [
-        inTmuxCopyMode = true
-        // Wait a bit before sending scroll command
+        // Send Ctrl+B first
+        sendKeys('\x02') // Ctrl+B
+        // Then send [ separately after a delay
         setTimeout(() => {
-          // Send multiple up arrows based on scroll amount
-          const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 50), 5)
-          for (let i = 0; i < scrollAmount; i++) {
-            sendKeys('\x1b[A') // Up arrow
-          }
+          sendKeys('[')
+          inTmuxCopyMode = true
+          // Wait a bit more before sending scroll command
+          setTimeout(() => {
+            // Send multiple up arrows based on scroll amount
+            const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 3)
+            for (let i = 0; i < scrollAmount; i++) {
+              sendKeys('\x1b[A') // Up arrow
+            }
+          }, 150)
         }, 100)
       } else {
         // Already in copy mode, just scroll
-        const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 50), 5)
+        const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 3)
         for (let i = 0; i < scrollAmount; i++) {
           sendKeys('\x1b[A') // Up arrow
         }
@@ -744,7 +763,7 @@ function initTerminal() {
     } else {
       // Scroll down
       if (inTmuxCopyMode) {
-        const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 50), 5)
+        const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 3)
         for (let i = 0; i < scrollAmount; i++) {
           sendKeys('\x1b[B') // Down arrow
         }
@@ -1122,6 +1141,39 @@ function focusTerminal(event?: MouseEvent) {
       terminalContainer.value.focus()
     }
   }
+}
+
+/**
+ * Manually enter tmux copy mode
+ */
+function enterTmuxCopyMode() {
+  if (!connected.value) return
+
+  if (inTmuxCopyMode) {
+    // Already in copy mode, exit instead
+    sendKeys('q')
+    inTmuxCopyMode = false
+    message.info(t('terminal.exitCopyMode'))
+  } else {
+    // Enter copy mode
+    sendKeys('\x02') // Ctrl+B
+    setTimeout(() => {
+      sendKeys('[')
+      inTmuxCopyMode = true
+      message.info(t('terminal.copyModeHint'))
+    }, 100)
+  }
+}
+
+/**
+ * Manually exit tmux copy mode
+ */
+function exitTmuxCopyMode() {
+  if (!connected.value || !inTmuxCopyMode) return
+
+  sendKeys('q')
+  inTmuxCopyMode = false
+  message.info(t('terminal.exitCopyMode'))
 }
 
 /**

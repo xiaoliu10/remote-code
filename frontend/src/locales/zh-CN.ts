@@ -146,7 +146,10 @@ export default {
     pageUp: '向上翻页',
     pageDown: '向下翻页',
     localScroll: '本地滚动（浏览历史）',
-    remoteScroll: '远程滚动（点击终端后滚动鼠标）'
+    remoteScroll: '远程滚动（点击终端后滚动鼠标）',
+    enterCopyMode: '进入tmux复制模式',
+    exitCopyMode: '退出tmux复制模式',
+    copyModeHint: '使用方向键滚动，q退出，/搜索'
   },
   sessions: {
     selectSession: '请从左侧选择一个会话',
