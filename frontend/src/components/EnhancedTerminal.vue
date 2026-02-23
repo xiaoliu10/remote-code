@@ -480,7 +480,7 @@ function handleSpecialKey(key: string) {
     setTimeout(() => {
       sendKeys('[') // Send [
     }, 50)
-    message.info(t('terminal.tmuxCopyMode', { key: modifierKeyName }))
+    message.info(t('terminal.tmuxCopyMode'))
     return
   }
 
@@ -838,20 +838,15 @@ function initTerminal() {
  * Handle keyboard events in command input
  */
 function handleKeyDown(e: KeyboardEvent) {
-  // Use OS-appropriate modifier key
-  const isModifierPressed = isMac ? e.metaKey : e.ctrlKey
-
-  // Handle modifier+B for sending tmux prefix + copy mode command
-  // On Mac: ⌘+B sends Ctrl+B then [
-  // On Linux: Ctrl+B sends Ctrl+B then [
-  if (e.key === 'b' && isModifierPressed) {
+  // Handle Ctrl+B for sending tmux prefix (all platforms)
+  if (e.key === 'b' && e.ctrlKey) {
     e.preventDefault()
     // Send tmux prefix key (Ctrl+B) then copy mode command ([)
     sendKeys('\x02') // Send Ctrl+B (tmux prefix)
     setTimeout(() => {
       sendKeys('[') // Send [ to enter copy mode
     }, 50)
-    message.info(t('terminal.tmuxCopyMode', { key: modifierKeyName }))
+    message.info(t('terminal.tmuxCopyMode'))
     return
   }
 
@@ -868,13 +863,13 @@ function handleKeyDown(e: KeyboardEvent) {
       navigateHistory(1)
       break
     case 'c':
-      if (isModifierPressed) {
+      if (e.ctrlKey) {
         // Clear current command
         currentCommand.value = ''
       }
       break
     case 'l':
-      if (isModifierPressed) {
+      if (e.ctrlKey) {
         // Clear terminal
         e.preventDefault()
         handleClear()
