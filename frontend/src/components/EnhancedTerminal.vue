@@ -247,7 +247,7 @@
           ref="commandInputRef"
           v-model:value="currentCommand"
           :placeholder="realtimeMode ? t('terminal.typeCommandRealtime') : t('terminal.typeCommand')"
-          :disabled="!connected"
+          :disabled="!connected || inTmuxCopyMode"
           @keydown="handleKeyDown"
           @update:value="handleInputChange"
           @blur="handleInputBlur"
@@ -1122,20 +1122,36 @@ function focusTerminal(event?: MouseEvent) {
 
   // First, blur any currently focused element (input field, etc)
   const activeElement = document.activeElement as HTMLElement
-  if (activeElement && activeElement !== terminalContainer.value) {
+  if (activeElement) {
     activeElement.blur()
   }
 
-  // Then focus the terminal
-  if (terminal) {
-    // Focus the xterm.js internal textarea
-    terminal.focus()
-
-    // Also try to focus the container for good measure
-    if (terminalContainer.value) {
-      terminalContainer.value.focus()
+  // Force remove focus from all inputs
+  const allInputs = document.querySelectorAll('input, textarea')
+  allInputs.forEach((input) => {
+    if (input instanceof HTMLElement) {
+      input.blur()
     }
-  }
+  })
+
+  // Then focus the terminal with a small delay
+  setTimeout(() => {
+    if (terminal) {
+      // Focus the xterm.js internal textarea
+      terminal.focus()
+
+      // Also try to focus the container for good measure
+      if (terminalContainer.value) {
+        terminalContainer.value.focus()
+      }
+
+      // Force focus on xterm's textarea element
+      const xtermTextarea = terminalContainer.value?.querySelector('textarea.xterm-helper-textarea') as HTMLElement
+      if (xtermTextarea) {
+        xtermTextarea.focus()
+      }
+    }
+  }, 50)
 }
 
 /**
@@ -1144,20 +1160,21 @@ function focusTerminal(event?: MouseEvent) {
 function enterTmuxCopyMode() {
   if (!connected.value) return
 
-  // Always focus terminal first
-  focusTerminal()
-
   if (inTmuxCopyMode) {
     // Already in copy mode, exit instead
     exitCopyMode()
     inTmuxCopyMode = false
     message.info(t('terminal.exitCopyMode'))
+    // Re-focus input when exiting copy mode
+    nextTick(() => {
+      commandInputRef?.focus()
+    })
   } else {
     // Enter copy mode using dedicated API
     enterCopyMode()
     inTmuxCopyMode = true
     message.info(t('terminal.copyModeHint'))
-    // Ensure terminal has focus after entering copy mode
+    // Disable input and focus terminal
     nextTick(() => {
       focusTerminal()
     })
