@@ -485,12 +485,12 @@ function handleSpecialKey(key: string) {
 
   // Handle scroll in copy mode
   if (key === 'scroll-up') {
-    scrollUp(1)
+    scrollUp(5) // Scroll 5 lines at a time
     return
   }
 
   if (key === 'scroll-down') {
-    scrollDown(1)
+    scrollDown(5) // Scroll 5 lines at a time
     return
   }
 
@@ -751,14 +751,14 @@ function initTerminal() {
       clearTimeout(scrollTimeout)
     }
 
-    // Auto-exit copy mode after 2 seconds of no scrolling
+    // Auto-exit copy mode after 3 seconds of no scrolling
     scrollTimeout = window.setTimeout(() => {
       if (inTmuxCopyMode.value) {
         console.log('[Scroll] Auto-exit copy mode')
         exitCopyMode()
         inTmuxCopyMode.value = false
       }
-    }, 2000)
+    }, 3000)
 
     // Enter copy mode if not already in it
     if (!inTmuxCopyMode.value) {
@@ -769,7 +769,8 @@ function initTerminal() {
 
     // Send scroll commands using tmux scroll commands
     setTimeout(() => {
-      const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 5)
+      // Scroll more lines at once for visible effect
+      const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 20), 10) // Increased from /30,5 to /20,10
       console.log('[Scroll] Scrolling, amount:', scrollAmount, 'direction:', e.deltaY < 0 ? 'up' : 'down')
 
       if (e.deltaY < 0) {
@@ -872,7 +873,7 @@ function handleKeyDown(e: KeyboardEvent) {
     case 'ArrowUp':
       if (inTmuxCopyMode.value) {
         e.preventDefault()
-        scrollUp(1)
+        scrollUp(3) // Scroll 3 lines at a time
       } else {
         e.preventDefault()
         navigateHistory(-1)
@@ -881,7 +882,7 @@ function handleKeyDown(e: KeyboardEvent) {
     case 'ArrowDown':
       if (inTmuxCopyMode.value) {
         e.preventDefault()
-        scrollDown(1)
+        scrollDown(3) // Scroll 3 lines at a time
       } else {
         e.preventDefault()
         navigateHistory(1)
