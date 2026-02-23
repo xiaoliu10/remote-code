@@ -1387,10 +1387,10 @@ onUnmounted(() => {
 
 :deep(.xterm-viewport::-webkit-scrollbar-thumb) {
   background: linear-gradient(180deg, #4A9CFF 0%, #667eea 100%);
-  border-radius: 0;
-  border: 3px solid #2B2B2B;
-  min-height: 200px; /* Increased from 100px to 200px for longer thumb */
-  box-shadow: 0 0 4px rgba(74, 156, 255, 0.5);
+  border-radius: 4px;
+  border: 4px solid #2B2B2B;
+  min-height: 300px; /* Increased to 300px for much larger thumb */
+  box-shadow: 0 0 6px rgba(74, 156, 255, 0.6);
 }
 
 :deep(.xterm-viewport::-webkit-scrollbar-thumb:hover) {
