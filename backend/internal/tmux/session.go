@@ -202,7 +202,7 @@ func (s *Session) ScrollUp(lines int) error {
 	defer s.mu.Unlock()
 
 	for i := 0; i < lines; i++ {
-		cmd := exec.Command("tmux", "send-keys", "-t", s.Name, "-X", "cursor-up")
+		cmd := exec.Command("tmux", "send-keys", "-t", s.Name, "-X", "scroll-up")
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("failed to scroll up: %w", err)
 		}
@@ -217,7 +217,7 @@ func (s *Session) ScrollDown(lines int) error {
 	defer s.mu.Unlock()
 
 	for i := 0; i < lines; i++ {
-		cmd := exec.Command("tmux", "send-keys", "-t", s.Name, "-X", "cursor-down")
+		cmd := exec.Command("tmux", "send-keys", "-t", s.Name, "-X", "scroll-down")
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("failed to scroll down: %w", err)
 		}

@@ -1389,7 +1389,7 @@ onUnmounted(() => {
   background: linear-gradient(180deg, #4A9CFF 0%, #667eea 100%);
   border-radius: 0;
   border: 3px solid #2B2B2B;
-  min-height: 100px; /* Increased from 60px to 100px for easier dragging */
+  min-height: 200px; /* Increased from 100px to 200px for longer thumb */
   box-shadow: 0 0 4px rgba(74, 156, 255, 0.5);
 }
 
