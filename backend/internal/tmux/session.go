@@ -185,11 +185,24 @@ func (s *Session) EnterCopyMode() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	// First check current mode
+	checkCmd := exec.Command("tmux", "display-message", "-t", s.Name, "-p", "#{pane_mode}")
+	output, _ := checkCmd.Output()
+	currentMode := string(output)
+
+	log.Printf("[Tmux] Current mode before entering copy mode: %s", currentMode)
+
 	// Use tmux command to enter copy mode directly
 	cmd := exec.Command("tmux", "copy-mode", "-t", s.Name)
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to enter copy mode: %w", err)
 	}
+
+	// Verify we're now in copy mode
+	verifyCmd := exec.Command("tmux", "display-message", "-t", s.Name, "-p", "#{pane_mode}")
+	verifyOutput, _ := verifyCmd.Output()
+	newMode := string(verifyOutput)
+	log.Printf("[Tmux] Mode after entering copy mode: %s", newMode)
 
 	return nil
 }
