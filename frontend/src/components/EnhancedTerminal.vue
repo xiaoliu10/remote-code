@@ -350,6 +350,11 @@ const commandInputRef = ref<InstanceType<typeof NInput>>()
 
 // Tmux copy mode state (shared across functions)
 const inTmuxCopyMode = ref(false)
+
+// Detect operating system and choose modifier key
+const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
+const modifierKey = isMac ? 'metaKey' : 'ctrlKey'
+const modifierKeyName = isMac ? '⌘' : 'Ctrl'
 const currentCommand = ref('')
 const commandHistory = ref<string[]>([])
 const historyIndex = ref(-1)
@@ -822,8 +827,11 @@ function initTerminal() {
  * Handle keyboard events in command input
  */
 function handleKeyDown(e: KeyboardEvent) {
-  // Handle Ctrl+B (Windows/Linux) or Cmd+B (Mac) for entering tmux copy mode
-  if (e.key === 'b' && (e.ctrlKey || e.metaKey)) {
+  // Use OS-appropriate modifier key
+  const isModifierPressed = isMac ? e.metaKey : e.ctrlKey
+
+  // Handle modifier+B for entering tmux copy mode
+  if (e.key === 'b' && isModifierPressed) {
     e.preventDefault()
     enterTmuxCopyMode()
     return
@@ -842,14 +850,14 @@ function handleKeyDown(e: KeyboardEvent) {
       navigateHistory(1)
       break
     case 'c':
-      if (e.ctrlKey || e.metaKey) {
-        // Clear current command (Ctrl+C or Cmd+C)
+      if (isModifierPressed) {
+        // Clear current command
         currentCommand.value = ''
       }
       break
     case 'l':
-      if (e.ctrlKey || e.metaKey) {
-        // Clear terminal (Ctrl+L or Cmd+L)
+      if (isModifierPressed) {
+        // Clear terminal
         e.preventDefault()
         handleClear()
       }
@@ -1154,11 +1162,13 @@ function focusTerminal(event?: MouseEvent) {
 function enterTmuxCopyMode() {
   if (!connected.value) return
 
+  const shortcutHint = `${modifierKeyName}+B`
+
   if (inTmuxCopyMode.value) {
     // Already in copy mode, exit instead
     exitCopyMode()
     inTmuxCopyMode.value = false
-    message.info(t('terminal.exitCopyMode'))
+    message.info(`${t('terminal.exitCopyMode')} (${shortcutHint})`)
     // Re-focus input when exiting copy mode
     nextTick(() => {
       if (commandInputRef?.value) {
@@ -1169,7 +1179,7 @@ function enterTmuxCopyMode() {
     // Enter copy mode using dedicated API
     enterCopyMode()
     inTmuxCopyMode.value = true
-    message.info(t('terminal.copyModeHint'))
+    message.info(`${t('terminal.copyModeHint')} (${shortcutHint})`)
     // Focus terminal after a delay to avoid blur event
     setTimeout(() => {
       focusTerminal()
