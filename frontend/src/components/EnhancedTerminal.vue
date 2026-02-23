@@ -166,6 +166,7 @@
               <button class="key-btn danger" @click="handleSpecialKey('c-c')">Ctrl+C</button>
               <button class="key-btn" @click="handleSpecialKey('c-l')">Ctrl+L</button>
               <button class="key-btn" @click="handleSpecialKey('c-d')">Ctrl+D</button>
+              <button class="key-btn primary" @click="handleSpecialKey('tmux-copy')">滚动</button>
             </div>
           </div>
 
@@ -470,6 +471,16 @@ function handleSpecialKey(key: string) {
     if (terminal) {
       terminal.write('/')
     }
+    return
+  }
+
+  // Handle tmux copy mode (Ctrl+B [)
+  if (key === 'tmux-copy') {
+    sendKeys('\x02') // Send Ctrl+B
+    setTimeout(() => {
+      sendKeys('[') // Send [
+    }, 50)
+    message.info(t('terminal.tmuxCopyMode', { key: modifierKeyName }))
     return
   }
 
