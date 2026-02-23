@@ -141,6 +141,7 @@ export default {
     voiceRecognized: '语音识别成功',
     voiceTimeout: '语音输入超时',
     voiceStartFailed: '无法启动语音识别',
+    tmuxPrefix: '已发送 Ctrl+B (tmux prefix)',
     scrollToTop: '滚动到顶部',
     scrollToBottom: '滚动到底部',
     pageUp: '向上翻页',

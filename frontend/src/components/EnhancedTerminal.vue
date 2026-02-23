@@ -814,6 +814,14 @@ function initTerminal() {
  * Handle keyboard events in command input
  */
 function handleKeyDown(e: KeyboardEvent) {
+  // Handle Ctrl+B for tmux prefix key
+  if (e.key === 'b' && e.ctrlKey) {
+    e.preventDefault()
+    sendKeys('\x02') // Send Ctrl+B (tmux prefix)
+    message.info('已发送 Ctrl+B (tmux prefix)')
+    return
+  }
+
   switch (e.key) {
     case 'Enter':
       sendCurrentCommand()
