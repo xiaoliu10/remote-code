@@ -1160,8 +1160,8 @@ function enterTmuxCopyMode() {
     message.info(t('terminal.exitCopyMode'))
     // Re-focus input when exiting copy mode
     nextTick(() => {
-      if (commandInputRef) {
-        commandInputRef.focus()
+      if (commandInputRef?.value) {
+        commandInputRef.value.focus()
       }
     })
   } else {
