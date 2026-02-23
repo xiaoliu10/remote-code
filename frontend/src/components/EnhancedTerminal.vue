@@ -349,7 +349,7 @@ const terminalContainer = ref<HTMLElement>()
 const commandInputRef = ref<InstanceType<typeof NInput>>()
 
 // Tmux copy mode state (shared across functions)
-let inTmuxCopyMode = false
+const inTmuxCopyMode = ref(false)
 const currentCommand = ref('')
 const commandHistory = ref<string[]>([])
 const historyIndex = ref(-1)
@@ -433,10 +433,10 @@ watch(scrollMode, (newMode, oldMode) => {
     nextTick(() => {
       focusTerminal()
     })
-  } else if (oldMode === 'remote' && inTmuxCopyMode) {
+  } else if (oldMode === 'remote' && inTmuxCopyMode.value) {
     // Exit tmux copy mode when switching back to local mode
-    sendKeys('q')
-    inTmuxCopyMode = false
+    exitCopyMode()
+    inTmuxCopyMode.value = false
   }
 })
 
@@ -674,9 +674,9 @@ function initTerminal() {
     terminal.on('blur', () => {
       terminalFocused.value = false
       // Exit tmux copy mode when terminal loses focus
-      if (inTmuxCopyMode) {
-        sendKeys('q')
-        inTmuxCopyMode = false
+      if (inTmuxCopyMode.value) {
+        exitCopyMode()
+        inTmuxCopyMode.value = false
       }
     })
   } catch (e) {
@@ -687,9 +687,9 @@ function initTerminal() {
     terminalContainer.value?.addEventListener('focusout', () => {
       terminalFocused.value = false
       // Exit tmux copy mode when terminal loses focus
-      if (inTmuxCopyMode) {
-        sendKeys('q')
-        inTmuxCopyMode = false
+      if (inTmuxCopyMode.value) {
+        exitCopyMode()
+        inTmuxCopyMode.value = false
       }
     })
   }
@@ -728,18 +728,18 @@ function initTerminal() {
 
     // Auto-exit tmux copy mode after 3 seconds of no scrolling
     scrollTimeout = window.setTimeout(() => {
-      if (inTmuxCopyMode) {
+      if (inTmuxCopyMode.value) {
         exitCopyMode()
-        inTmuxCopyMode = false
+        inTmuxCopyMode.value = false
       }
     }, 3000)
 
     if (e.deltaY < 0) {
       // Scroll up
-      if (!inTmuxCopyMode) {
+      if (!inTmuxCopyMode.value) {
         // Enter tmux copy mode using dedicated API
         enterCopyMode()
-        inTmuxCopyMode = true
+        inTmuxCopyMode.value = true
         // Wait a bit before sending scroll command
         setTimeout(() => {
           // Send multiple up arrows based on scroll amount
@@ -757,7 +757,7 @@ function initTerminal() {
       }
     } else {
       // Scroll down
-      if (inTmuxCopyMode) {
+      if (inTmuxCopyMode.value) {
         const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 3)
         for (let i = 0; i < scrollAmount; i++) {
           sendKeys('\x1b[B') // Down arrow
@@ -1160,10 +1160,10 @@ function focusTerminal(event?: MouseEvent) {
 function enterTmuxCopyMode() {
   if (!connected.value) return
 
-  if (inTmuxCopyMode) {
+  if (inTmuxCopyMode.value) {
     // Already in copy mode, exit instead
     exitCopyMode()
-    inTmuxCopyMode = false
+    inTmuxCopyMode.value = false
     message.info(t('terminal.exitCopyMode'))
     // Re-focus input when exiting copy mode
     nextTick(() => {
@@ -1172,7 +1172,7 @@ function enterTmuxCopyMode() {
   } else {
     // Enter copy mode using dedicated API
     enterCopyMode()
-    inTmuxCopyMode = true
+    inTmuxCopyMode.value = true
     message.info(t('terminal.copyModeHint'))
     // Disable input and focus terminal
     nextTick(() => {
@@ -1185,10 +1185,10 @@ function enterTmuxCopyMode() {
  * Manually exit tmux copy mode
  */
 function exitTmuxCopyMode() {
-  if (!connected.value || !inTmuxCopyMode) return
+  if (!connected.value || !inTmuxCopyMode.value) return
 
-  sendKeys('q')
-  inTmuxCopyMode = false
+  exitCopyMode()
+  inTmuxCopyMode.value = false
   message.info(t('terminal.exitCopyMode'))
 }
 
