@@ -22,6 +22,7 @@ package tmux
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -192,25 +193,6 @@ func (s *Session) EnterCopyMode() error {
 	}
 
 	log.Printf("[Tmux] Entered copy mode for session %s", s.Name)
-	return nil
-}
-
-// ExitCopyMode 退出 tmux copy mode
-func (s *Session) ExitCopyMode() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	// Use tmux command to exit copy mode
-	cmd := exec.Command("tmux", "send-keys", "-t", s.Name, "-X", "cancel")
-	if err := cmd.Run(); err != nil {
-		// Fallback: send q key
-		cmd = exec.Command("tmux", "send-keys", "-t", s.Name, "q")
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("failed to exit copy mode: %w", err)
-		}
-	}
-
-	log.Printf("[Tmux] Exited copy mode for session %s", s.Name)
 	return nil
 }
 
