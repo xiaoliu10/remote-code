@@ -652,7 +652,9 @@ function initTerminal() {
       brightWhite: '#e5e5e5'
     },
     scrollback: 50000, // Increased from 10000 to 50000 for much longer scroll history
-    allowProposedApi: true
+    allowProposedApi: true,
+    // Enable mouse events to pass through to tmux
+    allowTransparency: true
   })
 
   // Load addons
@@ -689,19 +691,60 @@ function initTerminal() {
     })
   }
 
-  // Handle mouse wheel - let tmux handle it natively with mouse mode enabled
-  // Don't intercept wheel events - let them pass through to tmux
-  // Tmux's mouse mode will automatically enter copy-mode and scroll
+  // Handle mouse wheel for tmux scrolling
+  // Since xterm.js in browser doesn't pass mouse events to tmux,
+  // we need to manually send scroll commands
+  let scrollTimeout: number | null = null
+
   terminalContainer.value.addEventListener('wheel', (e: WheelEvent) => {
-    // Don't intercept wheel events when in remote mode
-    // Let tmux's mouse mode handle scrolling natively
-    if (scrollMode.value === 'remote') {
-      // Don't prevent default - let the event pass through to tmux
-      // This allows tmux's mouse mode to work properly
+    if (scrollMode.value !== 'remote') {
+      // Local mode: let the browser handle scrolling
       return
     }
-    // In local mode, let browser handle scrolling normally
-  }, { passive: true })
+
+    if (!connected.value) return
+
+    // Focus terminal when scrolling
+    if (terminal) {
+      terminal.focus()
+    }
+
+    // Clear auto-exit timeout
+    if (scrollTimeout) {
+      clearTimeout(scrollTimeout)
+    }
+
+    // Auto-exit copy mode after 2 seconds of no scrolling
+    scrollTimeout = window.setTimeout(() => {
+      if (inTmuxCopyMode.value) {
+        exitCopyMode()
+        inTmuxCopyMode.value = false
+      }
+    }, 2000)
+
+    // Enter copy mode if not already in it
+    if (!inTmuxCopyMode.value) {
+      enterCopyMode()
+      inTmuxCopyMode.value = true
+    }
+
+    // Send scroll commands after a small delay to ensure copy mode is active
+    setTimeout(() => {
+      if (e.deltaY < 0) {
+        // Scroll up - send Up arrow multiple times based on scroll amount
+        const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 5)
+        for (let i = 0; i < scrollAmount; i++) {
+          sendKeys('\x1b[A') // Up arrow
+        }
+      } else {
+        // Scroll down - send Down arrow
+        const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 30), 5)
+        for (let i = 0; i < scrollAmount; i++) {
+          sendKeys('\x1b[B') // Down arrow
+        }
+      }
+    }, 50)
+  }, { passive: false })
 
   // Auto-focus terminal when mouse enters (optional, for better UX)
   terminalContainer.value.addEventListener('mouseenter', () => {
@@ -1090,8 +1133,8 @@ function focusTerminal(event?: MouseEvent) {
 
 /**
  * Manually enter tmux copy mode
- * Note: With tmux mouse mode enabled, this is mainly for keyboard navigation
- * Mouse wheel scrolling is handled automatically by tmux
+ * This is for keyboard navigation or manual control
+ * Mouse wheel is handled separately via wheel event listener
  */
 function enterTmuxCopyMode() {
   if (!connected.value) return
@@ -1109,7 +1152,6 @@ function enterTmuxCopyMode() {
     })
   } else {
     // Enter copy mode using dedicated API
-    // This is for manual keyboard navigation
     enterCopyMode()
     inTmuxCopyMode.value = true
     message.info(t('terminal.copyModeHint'))
