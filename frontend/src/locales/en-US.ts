@@ -141,6 +141,7 @@ export default {
     voiceRecognized: 'Voice recognized',
     voiceTimeout: 'Voice input timeout',
     voiceStartFailed: 'Failed to start voice recognition',
+    tmuxCopyMode: 'Sent {key}+B [ (tmux copy mode)',
     scrollToTop: 'Scroll to top',
     scrollToBottom: 'Scroll to bottom',
     pageUp: 'Page up',

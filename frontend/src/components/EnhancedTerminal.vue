@@ -830,10 +830,17 @@ function handleKeyDown(e: KeyboardEvent) {
   // Use OS-appropriate modifier key
   const isModifierPressed = isMac ? e.metaKey : e.ctrlKey
 
-  // Handle modifier+B for entering tmux copy mode
+  // Handle modifier+B for sending tmux prefix + copy mode command
+  // On Mac: ⌘+B sends Ctrl+B then [
+  // On Linux: Ctrl+B sends Ctrl+B then [
   if (e.key === 'b' && isModifierPressed) {
     e.preventDefault()
-    enterTmuxCopyMode()
+    // Send tmux prefix key (Ctrl+B) then copy mode command ([)
+    sendKeys('\x02') // Send Ctrl+B (tmux prefix)
+    setTimeout(() => {
+      sendKeys('[') // Send [ to enter copy mode
+    }, 50)
+    message.info(t('terminal.tmuxCopyMode', { key: modifierKeyName }))
     return
   }
 
