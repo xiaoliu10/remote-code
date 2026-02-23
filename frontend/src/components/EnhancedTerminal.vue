@@ -1149,6 +1149,9 @@ function focusTerminal(event?: MouseEvent) {
 function enterTmuxCopyMode() {
   if (!connected.value) return
 
+  // Always focus terminal first
+  focusTerminal()
+
   if (inTmuxCopyMode) {
     // Already in copy mode, exit instead
     sendKeys('q')
@@ -1161,6 +1164,10 @@ function enterTmuxCopyMode() {
       sendKeys('[')
       inTmuxCopyMode = true
       message.info(t('terminal.copyModeHint'))
+      // Ensure terminal has focus after entering copy mode
+      nextTick(() => {
+        focusTerminal()
+      })
     }, 100)
   }
 }
