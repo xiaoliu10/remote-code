@@ -33,7 +33,7 @@ Remote Code provides remote access and control of these CLI tools through a web 
 - 📡 **Real-time Terminal**: WebSocket streaming for terminal output
 - 📜 **Terminal Scrolling**: tmux copy mode scrolling, view up to 5000 lines of history with visual scrollbar
 - ⌨️ **Remote Control**: Send commands with realtime mode and command mode
-- ⌨️ **Keyboard Shortcuts**: Ctrl+B (Windows/Linux) and ⌘+B (Mac) support
+- ⌨️ **Keyboard Shortcuts**: Ctrl+B support
 - 📱 **Mobile Optimized**: Custom virtual keyboard with arrow keys, Tab, Ctrl+C, Enter, scroll mode toggle
 - 🎤 **Voice Input**: Voice input support (requires HTTPS)
 - 📂 **File Browser**: Built-in file explorer
@@ -46,7 +46,7 @@ Remote Code provides remote access and control of these CLI tools through a web 
 
 ## What's New
 
-### v1.1.0 - Terminal Scrolling & Experience Improvements
+### v0.0.2 - Terminal Scrolling & Experience Improvements
 
 **New Features**
 - ✨ Added terminal scroll mode with tmux copy mode support (up to 5000 lines history)
