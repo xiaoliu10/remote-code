@@ -49,10 +49,10 @@ Remote Code provides remote access and control of these CLI tools through a web 
 ### v0.0.2 - Terminal Scrolling & Experience Improvements
 
 **New Features**
-- ✨ Added terminal scroll mode with tmux copy mode support (up to 5000 lines history)
+- ✨ Added terminal scroll mode with tmux copy mode support (default 1000 lines, configurable)
 - ✨ Added visual scrollbar with mouse wheel support
 - ✨ New scroll mode toggle button in virtual keyboard
-- ✨ Keyboard shortcuts: Ctrl+B (Windows/Linux) / ⌘+B (Mac) to toggle scroll mode
+- ✨ Keyboard shortcuts: Ctrl+B to toggle scroll mode
 - ✨ tmux session persistence - auto-restore sessions after restart
 - ✨ Configuration wizard on first run
 
