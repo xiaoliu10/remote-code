@@ -56,7 +56,8 @@ type SecurityConfig struct {
 }
 
 type TmuxConfig struct {
-	SocketPath string // tmux socket 路径
+	SocketPath      string // tmux socket 路径
+	ScrollbackLines int    // 终端历史缓冲区行数
 }
 
 func Load() *Config {
@@ -82,7 +83,8 @@ func Load() *Config {
 			RateLimitBurst:     getEnvInt("RATE_LIMIT_BURST", 20),
 		},
 		Tmux: TmuxConfig{
-			SocketPath: getEnv("TMUX_SOCKET", ""),
+			SocketPath:      getEnv("TMUX_SOCKET", ""),
+			ScrollbackLines: getEnvInt("TERMINAL_SCROLLBACK", 1000),
 		},
 	}
 }

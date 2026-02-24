@@ -228,7 +228,7 @@
           {{ isListening ? t('terminal.listening') : (voiceSupported ? t('terminal.voiceInput') : t('terminal.voiceNotSupported')) }}
         </n-tooltip>
 
-        <!-- Mode Toggle -->
+        <!-- Voice Input Mode Toggle -->
         <n-tooltip trigger="hover">
           <template #trigger>
             <n-button
@@ -242,23 +242,25 @@
               </template>
             </n-button>
           </template>
-          {{ realtimeMode ? t('terminal.realtimeMode') : t('terminal.commandMode') }}
+          {{ realtimeMode ? t('terminal.voiceRealtimeMode') : t('terminal.voiceCommandMode') }}
         </n-tooltip>
 
         <n-input
           ref="commandInputRef"
           v-model:value="currentCommand"
-          :placeholder="realtimeMode ? t('terminal.typeCommandRealtime') : t('terminal.typeCommand')"
+          :placeholder="t('terminal.typeCommand')"
           :disabled="!connected || inTmuxCopyMode"
           @keydown="handleKeyDown"
           @update:value="handleInputChange"
           @blur="handleInputBlur"
+          @compositionstart="isComposing = true"
+          @compositionend="isComposing = false"
         >
           <template #prefix>
             <n-icon><TerminalIcon /></n-icon>
           </template>
         </n-input>
-        <n-button type="primary" :disabled="!connected || !currentCommand.trim()" @click="sendCurrentCommand">
+        <n-button type="primary" :disabled="!connected || (!realtimeMode && !currentCommand.trim())" @click="sendCurrentCommand">
           {{ t('common.send') }}
         </n-button>
       </div>
@@ -370,8 +372,9 @@ const atPosition = ref(-1)
 
 // Input mode state
 const realtimeMode = ref(true) // true = realtime input, false = command mode
-const lastSentLength = ref(0) // Track last sent position for realtime mode
 const showCustomKeyboard = ref(false) // Show custom keyboard on mobile
+const isComposing = ref(false) // Track IME composition state
+const lastSentLength = ref(0) // Track last sent position for realtime mode
 
 // Voice input state
 const isListening = ref(false)
@@ -868,6 +871,10 @@ function handleKeyDown(e: KeyboardEvent) {
 
   switch (e.key) {
     case 'Enter':
+      // Ignore Enter if IME is composing (e.g., Chinese input)
+      if (e.isComposing || isComposing.value) {
+        return
+      }
       sendCurrentCommand()
       break
     case 'ArrowUp':
@@ -922,12 +929,17 @@ function navigateHistory(direction: number) {
 }
 
 /**
- * Handle input change - detect @ for file reference and realtime mode
+ * Handle input change - detect @ for file reference
+ * In realtime mode, send characters to terminal immediately.
  */
 function handleInputChange(value: string) {
+  // Don't process during IME composition
+  if (isComposing.value) {
+    return
+  }
+
   // Realtime mode: send each character to terminal
   if (realtimeMode.value && connected.value) {
-    // Calculate the difference and send only new characters
     const newLength = value.length
     if (newLength > lastSentLength.value) {
       // Send new characters
@@ -1009,23 +1021,29 @@ function insertFileReference(file: FileItem) {
 
 /**
  * Send current command (Enter key)
+ * Only triggered by explicit Enter key press or Send button click
  */
 function sendCurrentCommand() {
-  const cmd = currentCommand.value.trim()
+  const cmd = currentCommand.value
   if (!cmd || !connected.value) return
 
-  // Add to history
-  commandHistory.value.push(cmd)
-  if (commandHistory.value.length > 100) {
-    commandHistory.value.shift()
+  // Add to history (only non-empty commands)
+  const trimmedCmd = cmd.trim()
+  if (trimmedCmd) {
+    commandHistory.value.push(trimmedCmd)
+    if (commandHistory.value.length > 100) {
+      commandHistory.value.shift()
+    }
   }
   historyIndex.value = -1
 
+  // In realtime mode: chars already sent, but user explicitly pressed Enter
+  // We need to send Enter to execute. Use sendKeys to avoid duplicate command text.
+  // In command mode: send the full command with Enter
   if (realtimeMode.value) {
-    // In realtime mode, just send Enter to execute
-    sendKeys('\r')
+    // Only send Enter key - characters were sent in real-time
+    sendCommand('\n')
   } else {
-    // In command mode, send the full command with Enter
     sendCommand(cmd + '\n')
   }
 

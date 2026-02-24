@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -84,7 +85,15 @@ func main() {
 
 	// 初始化组件
 	jwtManager := auth.NewJWTManager(cfg.Auth.JWTSecret, cfg.Auth.TokenDuration)
-	tmuxManager := tmux.NewManager()
+
+	// 获取数据目录路径
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("Failed to get home directory: %v", err)
+	}
+	dataDir := filepath.Join(homeDir, ".remote-code")
+
+	tmuxManager := tmux.NewManager(dataDir)
 	validator := security.NewSessionValidator(cfg.Security.AllowedWorkDir)
 	wsHub := websocket.NewHub()
 

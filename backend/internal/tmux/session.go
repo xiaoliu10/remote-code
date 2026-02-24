@@ -46,17 +46,21 @@ type Session struct {
 
 // Manager 管理所有 tmux 会话
 type Manager struct {
-	sessions map[string]*Session
-	mu       sync.RWMutex
+	sessions    map[string]*Session
+	mu          sync.RWMutex
+	persistence *Persistence
 }
 
 // NewManager 创建新的会话管理器
-func NewManager() *Manager {
+func NewManager(dataDir string) *Manager {
 	m := &Manager{
-		sessions: make(map[string]*Session),
+		sessions:    make(map[string]*Session),
+		persistence: NewPersistence(dataDir),
 	}
 	// 启动时加载现有会话
 	m.loadExistingSessions()
+	// 恢复持久化的会话
+	m.restoreSessions()
 	return m
 }
 
@@ -77,6 +81,42 @@ func (m *Manager) loadExistingSessions() {
 			ID:        generateSessionID(),
 			Name:      name,
 			CreatedAt: time.Now(),
+		}
+	}
+}
+
+// restoreSessions 从持久化数据恢复会话
+func (m *Manager) restoreSessions() {
+	metadata, err := m.persistence.LoadSessions()
+	if err != nil {
+		log.Printf("[Tmux] Failed to load persisted sessions: %v", err)
+		return
+	}
+
+	for _, meta := range metadata {
+		// 检查会话是否已存在（可能是 loadExistingSessions 加载的）
+		if _, exists := m.sessions[meta.Name]; exists {
+			continue
+		}
+
+		// 尝试重新创建 tmux 会话
+		args := []string{"new-session", "-d", "-s", meta.Name}
+		if meta.WorkDir != "" {
+			args = append(args, "-c", meta.WorkDir)
+		}
+
+		cmd := exec.Command("tmux", args...)
+		if err := cmd.Run(); err != nil {
+			log.Printf("[Tmux] Failed to restore session %s: %v", meta.Name, err)
+			continue
+		}
+
+		log.Printf("[Tmux] Restored session: %s", meta.Name)
+		m.sessions[meta.Name] = &Session{
+			ID:        generateSessionID(),
+			Name:      meta.Name,
+			WorkDir:   meta.WorkDir,
+			CreatedAt: meta.CreatedAt,
 		}
 	}
 }
@@ -109,6 +149,16 @@ func (m *Manager) CreateSession(name, workDir string) (*Session, error) {
 	}
 
 	m.sessions[name] = session
+
+	// 持久化会话元数据
+	if err := m.persistence.AddSession(SessionMetadata{
+		Name:      name,
+		WorkDir:   workDir,
+		CreatedAt: session.CreatedAt,
+	}); err != nil {
+		log.Printf("[Tmux] Failed to persist session %s: %v", name, err)
+	}
+
 	return session, nil
 }
 
@@ -151,6 +201,12 @@ func (m *Manager) DeleteSession(name string) error {
 	}
 
 	delete(m.sessions, name)
+
+	// 清理持久化数据
+	if err := m.persistence.RemoveSession(name); err != nil {
+		log.Printf("[Tmux] Failed to remove persisted session %s: %v", name, err)
+	}
+
 	return nil
 }
 

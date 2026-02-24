@@ -262,6 +262,11 @@ serverPort = $FRP_SERVER_PORT
 # Authentication token
 auth.token = "$FRP_TOKEN"
 
+# Reconnection settings (重连配置)
+loginFailExit = false
+transport.heartbeatInterval = 10
+transport.heartbeatTimeout = 90
+
 # Frontend service
 [[proxies]]
 name = "remote-code-frontend"

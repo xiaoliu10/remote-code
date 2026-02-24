@@ -24,6 +24,8 @@ services:
       - "80:80"
     depends_on:
       - backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Linux 需要这个
     restart: unless-stopped
 
   # Frp 客户端（可选）

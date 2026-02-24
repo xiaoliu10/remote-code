@@ -29,10 +29,12 @@ Remote Code provides remote access and control of these CLI tools through a web 
 
 - 🔐 **Secure Authentication**: JWT Token + bcrypt password encryption
 - 🎨 **Beautiful UI**: Glassmorphism login page, modern design
-- 🖥️ **Session Management**: Create, delete, and view terminal sessions
+- 🖥️ **Session Management**: Create, delete, view terminal sessions with persistence support
 - 📡 **Real-time Terminal**: WebSocket streaming for terminal output
+- 📜 **Terminal Scrolling**: tmux copy mode scrolling, view up to 5000 lines of history with visual scrollbar
 - ⌨️ **Remote Control**: Send commands with realtime mode and command mode
-- 📱 **Mobile Optimized**: Custom virtual keyboard with arrow keys, Tab, Ctrl+C, Enter
+- ⌨️ **Keyboard Shortcuts**: Ctrl+B (Windows/Linux) and ⌘+B (Mac) support
+- 📱 **Mobile Optimized**: Custom virtual keyboard with arrow keys, Tab, Ctrl+C, Enter, scroll mode toggle
 - 🎤 **Voice Input**: Voice input support (requires HTTPS)
 - 📂 **File Browser**: Built-in file explorer
 - 🔒 **File Reference**: @ symbol for file references
@@ -41,6 +43,25 @@ Remote Code provides remote access and control of these CLI tools through a web 
 - 🌐 **Network Tunnel**: FRP, Tailscale, Cloudflare Tunnel
 - 🌍 **i18n**: Chinese and English support
 - 📜 **License**: Apache License 2.0
+
+## What's New
+
+### v1.1.0 - Terminal Scrolling & Experience Improvements
+
+**New Features**
+- ✨ Added terminal scroll mode with tmux copy mode support (up to 5000 lines history)
+- ✨ Added visual scrollbar with mouse wheel support
+- ✨ New scroll mode toggle button in virtual keyboard
+- ✨ Keyboard shortcuts: Ctrl+B (Windows/Linux) / ⌘+B (Mac) to toggle scroll mode
+- ✨ tmux session persistence - auto-restore sessions after restart
+- ✨ Configuration wizard on first run
+
+**Improvements**
+- 🎯 Improved terminal focus management with visual feedback
+- 🎯 Fixed mobile viewport zoom issue after keyboard closes
+- 🎯 Fixed 502 Bad Gateway issue in Docker deployment
+- 🎯 Fixed multi-device connection conflict handling
+- 🎯 Fixed session deletion error handling
 
 ## Tech Stack
 
@@ -255,9 +276,15 @@ Two input modes:
 - **Realtime Mode**: Each character sent immediately, supports autocomplete
 - **Command Mode**: Press Enter to send complete command
 
+**Scroll Mode**
+- Click the scroll button on virtual keyboard or press **Ctrl+B** (Mac: **⌘+B**) to enter scroll mode
+- Use mouse wheel or scrollbar to view history output (up to 5000 lines)
+- Press **q** or click scroll button again to exit
+
 Mobile virtual keyboard:
 - Arrow keys (up/down/left/right)
 - Tab, Ctrl+C, Ctrl+D
+- 📜 Scroll mode toggle
 - @ symbol (file reference)
 - 🎤 Voice input
 

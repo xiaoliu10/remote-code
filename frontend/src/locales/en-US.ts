@@ -117,7 +117,7 @@ export default {
   },
   terminal: {
     title: 'Remote Terminal',
-    typeCommand: 'Type command... (use @ to reference files)',
+    typeCommand: "Type command... (use {'@'} to reference files)",
     typeCommandRealtime: 'Realtime input mode... (chars sent live)',
     welcome: 'Remote Code Terminal',
     session: 'Session',
@@ -132,6 +132,8 @@ export default {
     searchFiles: 'Search files...',
     realtimeMode: 'Realtime Mode - chars sent to remote immediately',
     commandMode: 'Command Mode - press Enter or Send to execute',
+    voiceRealtimeMode: 'Voice Realtime - speech sent directly to terminal',
+    voiceCommandMode: 'Voice Command - speech appended to input',
     voiceInput: 'Voice Input',
     listening: 'Listening...',
     voiceNotSupported: 'Voice not supported',

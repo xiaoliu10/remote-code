@@ -117,7 +117,7 @@ export default {
   },
   terminal: {
     title: '远程终端',
-    typeCommand: '输入命令... (输入 @ 引用文件)',
+    typeCommand: "输入命令... (输入 {'@'} 引用文件)",
     typeCommandRealtime: '实时输入模式... (字符实时发送)',
     welcome: 'Remote Code 终端',
     session: '会话',
@@ -132,6 +132,8 @@ export default {
     searchFiles: '搜索文件...',
     realtimeMode: '实时输入模式 - 字符实时发送到远端',
     commandMode: '命令模式 - 按 Enter 或点击发送执行命令',
+    voiceRealtimeMode: '语音实时模式 - 语音直接发送到终端',
+    voiceCommandMode: '语音命令模式 - 语音追加到输入框',
     voiceInput: '语音输入',
     listening: '正在听...',
     voiceNotSupported: '浏览器不支持语音',
