@@ -561,6 +561,12 @@ function initVoiceRecognition() {
       clearTimeout(voiceTimeout)
       voiceTimeout = null
     }
+    // 语音识别结束后，将焦点设置回命令输入框（非实时模式）
+    if (!realtimeMode.value) {
+      nextTick(() => {
+        commandInputRef.value?.focus()
+      })
+    }
   }
 
   recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -608,6 +614,10 @@ function initVoiceRecognition() {
       if (!realtimeMode.value) {
         // Don't auto-send, let user review and send manually
         message.success(t('terminal.voiceRecognized') + ': ' + text)
+        // 语音识别到结果后，聚焦到输入框方便用户修改
+        nextTick(() => {
+          commandInputRef.value?.focus()
+        })
       }
     }
   }
