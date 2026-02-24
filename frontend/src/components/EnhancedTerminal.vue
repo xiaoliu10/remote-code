@@ -355,10 +355,7 @@ const commandInputRef = ref<InstanceType<typeof NInput>>()
 // Tmux copy mode state (shared across functions)
 const inTmuxCopyMode = ref(false)
 
-// Detect operating system and choose modifier key
-const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
-const modifierKey = isMac ? 'metaKey' : 'ctrlKey'
-const modifierKeyName = isMac ? '⌘' : 'Ctrl'
+// All platforms use Ctrl+B for tmux
 const currentCommand = ref('')
 const commandHistory = ref<string[]>([])
 const historyIndex = ref(-1)
@@ -1219,7 +1216,7 @@ function focusTerminal(event?: MouseEvent) {
 function enterTmuxCopyMode() {
   if (!connected.value) return
 
-  const shortcutHint = `${modifierKeyName}+B`
+  const shortcutHint = 'Ctrl+B'
 
   if (inTmuxCopyMode.value) {
     // Already in copy mode, exit instead
