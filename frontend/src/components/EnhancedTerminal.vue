@@ -426,9 +426,9 @@ let terminal: Terminal | null = null
 let fitAddon: FitAddon | null = null
 let searchAddon: SearchAddon | null = null
 
-// WebSocket connection
+// WebSocket connection - use getter function to support dynamic sessionName
 const { connected, error, kicked, connect, disconnect, sendCommand, sendKeys, enterCopyMode, exitCopyMode, scrollUp, scrollDown, onMessage, onConnect, onDisconnect } =
-  useWebSocket(props.sessionName)
+  useWebSocket(() => props.sessionName)
 
 // Scroll mode: 'local' (scroll web view) or 'remote' (send to terminal)
 const scrollMode = ref<'local' | 'remote'>('local')

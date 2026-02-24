@@ -56,7 +56,7 @@ function getWebSocketBaseUrl(): string {
   return `${wsProtocol}//${hostname}:${backendPort}/api`
 }
 
-export function useWebSocket(sessionName: string) {
+export function useWebSocket(sessionName: string | (() => string)) {
   const ws = ref<WebSocket | null>(null)
   const connected = ref(false)
   const error = ref<string | null>(null)
@@ -66,9 +66,14 @@ export function useWebSocket(sessionName: string) {
   const connectHandlers: ConnectionHandler[] = []
   const disconnectHandlers: ConnectionHandler[] = []
 
-  const token = localStorage.getItem('token')
-  const wsBaseUrl = getWebSocketBaseUrl()
-  const wsUrl = `${wsBaseUrl}/ws/${sessionName}?token=${token}`
+  // Support both static string and getter function for sessionName
+  const getSessionName = typeof sessionName === 'function' ? sessionName : () => sessionName
+
+  const getWsUrl = () => {
+    const token = localStorage.getItem('token')
+    const wsBaseUrl = getWebSocketBaseUrl()
+    return `${wsBaseUrl}/ws/${getSessionName()}?token=${token}`
+  }
 
   const connect = () => {
     // Don't reconnect if kicked
@@ -81,7 +86,7 @@ export function useWebSocket(sessionName: string) {
     }
 
     try {
-      ws.value = new WebSocket(wsUrl)
+      ws.value = new WebSocket(getWsUrl())
 
       ws.value.onopen = () => {
         connected.value = true
