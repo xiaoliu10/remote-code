@@ -300,6 +300,28 @@ Voice input has browser security restrictions:
 | localhost | No config needed for local access |
 | Chrome flag | Testing only, visit `chrome://flags/#unsafely-treat-insecure-origin-as-secure` |
 
+**Two voice input modes:**
+
+1. **Realtime Mode** (default): Voice recognition results sent to terminal in real-time, like typing characters
+2. **Command Mode**: Voice recognition results filled in command input box, edit before sending
+
+**How to use:**
+
+1. Click the **⚡ lightning button** to switch modes:
+   - Blue highlight = realtime mode
+   - Gray = command mode
+
+2. **Command mode usage** (recommended):
+   - Make sure the lightning button is gray (command mode)
+   - Click the 🎤 microphone button to start voice input
+   - After speaking, recognized text will be automatically filled in the command input
+   - The input box will automatically focus, allowing you to edit any inaccurate recognition
+   - Click "Send" or press Enter to send
+
+**Use cases:**
+- Command mode is suitable for scenarios where you need to edit the recognition result before sending
+- Realtime mode is suitable for quickly inputting simple commands
+
 ### 5. File Browser
 
 Click the file icon in sidebar to browse files.
