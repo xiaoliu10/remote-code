@@ -2,6 +2,8 @@
 
 [English](./README_EN.md) | 简体中文
 
+> **🤖 本项目 100% 由 AI (Claude Code) 编写完成**
+
 基于 Go + Vue 3 的远程终端管理工具，可以远程监控和控制 CLI 编程工具。
 
 ### 支持的 CLI 工具

@@ -2,6 +2,8 @@
 
 English | [简体中文](./README.md)
 
+> **🤖 This project is 100% written by AI (Claude Code)**
+
 A remote terminal management tool built with Go + Vue 3, allowing you to monitor and control CLI programming tools remotely.
 
 ### Supported CLI Tools
