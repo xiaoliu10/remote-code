@@ -61,6 +61,8 @@ func NewManager(dataDir string) *Manager {
 	m.loadExistingSessions()
 	// 恢复持久化的会话
 	m.restoreSessions()
+	// 将内存中的会话同步到持久化文件（处理服务重启前未持久化的情况）
+	m.syncExistingSessionsToPersistence()
 	return m
 }
 
@@ -82,6 +84,61 @@ func (m *Manager) loadExistingSessions() {
 			Name:      name,
 			CreatedAt: time.Now(),
 		}
+		log.Printf("[Tmux] Loaded existing tmux session: %s", name)
+	}
+
+	log.Printf("[Tmux] Loaded %d existing tmux session(s)", len(m.sessions))
+}
+
+// syncExistingSessionsToPersistence 将已存在的 tmux 会话同步到持久化文件
+func (m *Manager) syncExistingSessionsToPersistence() {
+	// 加载已持久化的会话列表
+	persisted, err := m.persistence.LoadSessions()
+	if err != nil {
+		log.Printf("[Tmux] Failed to load persisted sessions for sync: %v", err)
+		return
+	}
+
+	// 创建已持久化会话的 map
+	persistedMap := make(map[string]bool)
+	for _, meta := range persisted {
+		persistedMap[meta.Name] = true
+	}
+
+	// 将内存中的会话同步到持久化文件
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	// 收集有效的会话（同时存在于内存和 tmux 中的）
+	validSessions := make([]SessionMetadata, 0)
+
+	for name, session := range m.sessions {
+		// 检查 tmux 会话是否真实存在
+		cmd := exec.Command("tmux", "has-session", "-t", name)
+		if cmd.Run() != nil {
+			log.Printf("[Tmux] Session %s no longer exists in tmux, removing from memory", name)
+			delete(m.sessions, name)
+			continue
+		}
+
+		validSessions = append(validSessions, SessionMetadata{
+			Name:      name,
+			WorkDir:   session.WorkDir,
+			CreatedAt: session.CreatedAt,
+		})
+
+		if !persistedMap[name] {
+			// 该会话未被持久化，记录日志
+			log.Printf("[Tmux] Synced session %s to persistence", name)
+		}
+	}
+
+	// 如果有效会话数量与持久化文件不同，更新持久化文件
+	if len(validSessions) != len(persisted) {
+		log.Printf("[Tmux] Updating persistence file: %d valid sessions, %d persisted", len(validSessions), len(persisted))
+		if err := m.persistence.SaveSessions(validSessions); err != nil {
+			log.Printf("[Tmux] Failed to update persistence file: %v", err)
+		}
 	}
 }
 
@@ -93,9 +150,15 @@ func (m *Manager) restoreSessions() {
 		return
 	}
 
+	log.Printf("[Tmux] Loaded %d persisted session(s) from file", len(metadata))
+
 	for _, meta := range metadata {
 		// 检查会话是否已存在（可能是 loadExistingSessions 加载的）
-		if _, exists := m.sessions[meta.Name]; exists {
+		if session, exists := m.sessions[meta.Name]; exists {
+			// 会话已存在，更新其 WorkDir 信息
+			session.WorkDir = meta.WorkDir
+			session.CreatedAt = meta.CreatedAt
+			log.Printf("[Tmux] Updated existing session %s with persisted metadata (work_dir: %s)", meta.Name, meta.WorkDir)
 			continue
 		}
 
@@ -111,7 +174,7 @@ func (m *Manager) restoreSessions() {
 			continue
 		}
 
-		log.Printf("[Tmux] Restored session: %s", meta.Name)
+		log.Printf("[Tmux] Restored session: %s (work_dir: %s)", meta.Name, meta.WorkDir)
 		m.sessions[meta.Name] = &Session{
 			ID:        generateSessionID(),
 			Name:      meta.Name,

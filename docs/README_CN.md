@@ -6,6 +6,7 @@
 
 - [内网穿透指南](./NETWORK_TUNNEL_GUIDE.md) - 内网穿透方案选择和配置
 - [国内网络指南](./CHINA_NETWORK_GUIDE.md) - 针对国内用户的网络解决方案
+- [常见问题解答](./FAQ.md) - 常见问题及解决方案
 
 ## 开发文档
 

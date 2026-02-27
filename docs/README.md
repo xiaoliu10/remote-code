@@ -6,6 +6,7 @@ English | [简体中文](./README_CN.md)
 
 - [Network Tunnel Guide](./NETWORK_TUNNEL_GUIDE.md) - Network tunnel options and configuration
 - [China Network Guide](./CHINA_NETWORK_GUIDE.md) - Network solutions for users in China
+- [FAQ](./FAQ.md) - Frequently asked questions and solutions
 
 ## Development
 
