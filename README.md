@@ -391,6 +391,19 @@ ws.send(JSON.stringify({type: 'keys', data: 'ls'}))
 
 ## 故障排查
 
+> 更多问题请查看 [常见问题解答 (FAQ)](./docs/FAQ.md)
+
+### 在 Remote Code 中运行 Claude Code 报错
+
+如果遇到 "Nested sessions are not allowed" 错误，需要取消设置环境变量：
+
+```bash
+# 添加到 ~/.zshrc 或 ~/.bashrc
+unset CLAUDECODE
+```
+
+详见 [FAQ - Claude Code 嵌套会话问题](./docs/FAQ.md#1-在-remote-code-中运行-claude-code-报错nested-sessions-are-not-allowed)
+
 ### 端口被占用
 
 ```bash

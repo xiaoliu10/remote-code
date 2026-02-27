@@ -600,11 +600,15 @@ function initVoiceRecognition() {
       // Handle final result
       const text = finalTranscript.trim()
       if (realtimeMode.value) {
-        // In realtime mode, send each character
+        // In realtime mode, send each character and update tracking
         sendKeys(text)
         if (terminal) {
           terminal.write(text)
         }
+        // Update currentCommand and lastSentLength to keep them in sync
+        // This ensures subsequent manual input works correctly
+        currentCommand.value += text
+        lastSentLength.value = currentCommand.value.length
       } else {
         // In command mode, append to current command
         currentCommand.value += text
@@ -942,8 +946,16 @@ function navigateHistory(direction: number) {
 function handleInputChange(value: string) {
   // Don't process during IME composition
   if (isComposing.value) {
+    console.log('[Input] IME composing, skipping')
     return
   }
+
+  console.log('[Input] handleInputChange:', {
+    value,
+    realtimeMode: realtimeMode.value,
+    connected: connected.value,
+    lastSentLength: lastSentLength.value
+  })
 
   // Realtime mode: send each character to terminal
   if (realtimeMode.value && connected.value) {
@@ -951,10 +963,12 @@ function handleInputChange(value: string) {
     if (newLength > lastSentLength.value) {
       // Send new characters
       const newChars = value.slice(lastSentLength.value)
+      console.log('[Input] Sending new chars:', newChars)
       sendKeys(newChars)
     } else if (newLength < lastSentLength.value) {
       // Characters were deleted - send backspace for each deleted char
       const deletedCount = lastSentLength.value - newLength
+      console.log('[Input] Sending backspace x', deletedCount)
       for (let i = 0; i < deletedCount; i++) {
         sendKeys('\x7f') // Backspace
       }
@@ -1032,7 +1046,11 @@ function insertFileReference(file: FileItem) {
  */
 function sendCurrentCommand() {
   const cmd = currentCommand.value
-  if (!cmd || !connected.value) return
+
+  // In command mode, require non-empty command
+  // In realtime mode, chars are already sent to terminal, just need to send Enter
+  if (!connected.value) return
+  if (!realtimeMode.value && !cmd.trim()) return
 
   // Add to history (only non-empty commands)
   const trimmedCmd = cmd.trim()
@@ -1044,12 +1062,26 @@ function sendCurrentCommand() {
   }
   historyIndex.value = -1
 
-  // In realtime mode: chars already sent, but user explicitly pressed Enter
-  // We need to send Enter to execute. Use sendKeys to avoid duplicate command text.
-  // In command mode: send the full command with Enter
+  // In realtime mode: check if there are unsent characters
+  // This can happen if user manually edited the input after voice input
   if (realtimeMode.value) {
-    // Only send Enter key - characters were sent in real-time
-    sendCommand('\n')
+    const unsentLength = cmd.length - lastSentLength.value
+    if (unsentLength > 0) {
+      // There are unsent characters, send them first
+      const unsentChars = cmd.slice(lastSentLength.value)
+      console.log('[Send] Sending unsent chars:', unsentChars)
+      sendKeys(unsentChars)
+    } else if (unsentLength < 0) {
+      // Characters were deleted but not sent to terminal
+      // Send backspace for each deleted char
+      const deletedCount = -unsentLength
+      console.log('[Send] Sending backspace x', deletedCount)
+      for (let i = 0; i < deletedCount; i++) {
+        sendKeys('\x7f')
+      }
+    }
+    // Send Enter key to execute
+    sendKeys('\r')
   } else {
     sendCommand(cmd + '\n')
   }

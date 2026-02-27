@@ -391,6 +391,19 @@ ws.send(JSON.stringify({type: 'keys', data: 'ls'}))
 
 ## Troubleshooting
 
+> For more issues, see [FAQ](./docs/FAQ.md)
+
+### Claude Code Nested Session Error
+
+If you encounter "Nested sessions are not allowed" error when running Claude Code inside Remote Code, unset the environment variable:
+
+```bash
+# Add to ~/.zshrc or ~/.bashrc
+unset CLAUDECODE
+```
+
+See [FAQ - Claude Code Nested Sessions](./docs/FAQ.md#1-在-remote-code-中运行-claude-code-报错nested-sessions-are-not-allowed) for details.
+
 ### Port in Use
 
 ```bash
