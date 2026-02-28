@@ -18,7 +18,7 @@
 -->
 
 <template>
-  <div class="enhanced-terminal">
+  <div class="enhanced-terminal" :class="{ selecting: selectMode }">
     <!-- Terminal Header -->
     <div class="terminal-header">
       <div class="header-left">
@@ -29,6 +29,26 @@
         <span v-if="workDir" class="work-dir">{{ workDir }}</span>
       </div>
       <div class="header-right">
+        <!-- Select mode toggle -->
+        <n-tooltip trigger="hover">
+          <template #trigger>
+            <n-button
+              quaternary
+              size="small"
+              :type="selectMode ? 'primary' : 'default'"
+              @click="toggleSelectMode"
+            >
+              <template #icon>
+                <n-icon><CopyIcon /></n-icon>
+              </template>
+            </n-button>
+          </template>
+          {{ selectMode ? t('terminal.exitSelectMode') : t('terminal.selectMode') }}
+        </n-tooltip>
+        <!-- Copy button (only visible in select mode) -->
+        <n-button v-if="selectMode" type="primary" size="small" @click="handleCopy">
+          {{ t('terminal.copy') }}
+        </n-button>
         <n-button quaternary size="small" @click="handleClear">
           <template #icon>
             <n-icon><TrashIcon /></n-icon>
@@ -66,29 +86,6 @@
             </template>
           </n-button>
         </template>
-        <!-- Scroll controls -->
-        <n-button-group size="small">
-          <n-button quaternary size="small" @click="scrollToTop" title="Scroll to top">
-            <template #icon>
-              <n-icon><ArrowUpIcon /></n-icon>
-            </template>
-          </n-button>
-          <n-button quaternary size="small" @click="scrollPageUp" title="Page up">
-            <template #icon>
-              <n-icon><ChevronUpIcon /></n-icon>
-            </template>
-          </n-button>
-          <n-button quaternary size="small" @click="scrollPageDown" title="Page down">
-            <template #icon>
-              <n-icon><ChevronDownIcon /></n-icon>
-            </template>
-          </n-button>
-          <n-button quaternary size="small" @click="scrollToBottom" title="Scroll to bottom">
-            <template #icon>
-              <n-icon><ArrowDownIcon /></n-icon>
-            </template>
-          </n-button>
-        </n-button-group>
       </div>
     </div>
 
@@ -98,11 +95,51 @@
       class="terminal-container"
       :class="{
         'remote-scroll-mode': scrollMode === 'remote',
-        'terminal-focused': terminalFocused
+        'terminal-focused': terminalFocused,
+        'select-mode': selectMode
       }"
       tabindex="0"
       @click="focusTerminal"
     />
+
+    <!-- Select Mode Modal -->
+    <Teleport to="body">
+      <div v-if="selectMode" class="select-mode-fullscreen" @click.self="selectMode = false">
+        <div class="select-mode-dialog">
+          <div class="select-mode-title">
+            <span>{{ t('terminal.selectMode') }}</span>
+            <div class="select-mode-actions">
+              <n-button size="small" @click="selectAllLines">
+                {{ t('terminal.selectAll') }}
+              </n-button>
+              <n-button size="small" @click="clearSelection" :disabled="selectedLines.length === 0">
+                {{ t('terminal.clearSelection') }}
+              </n-button>
+              <n-button type="primary" size="small" @click="copySelectedLines" :disabled="selectedLines.length === 0">
+                {{ t('terminal.copySelected') }} ({{ selectedLines.length }})
+              </n-button>
+              <n-button size="small" @click="selectMode = false">
+                {{ t('terminal.exitSelectMode') }}
+              </n-button>
+            </div>
+          </div>
+          <div class="select-mode-body">
+            <div class="select-lines-container">
+              <div
+                v-for="(line, index) in selectableLines"
+                :key="index"
+                class="select-line"
+                :class="{ selected: selectedLines.includes(index) }"
+                @click="toggleLineSelection(index)"
+              >
+                <span class="line-number">{{ index + 1 }}</span>
+                <span class="line-content">{{ line }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
     <!-- File Reference Popover (positioned over terminal) -->
     <div v-if="showFilePopover" class="file-popover-overlay">
@@ -160,12 +197,18 @@
             <div class="keyboard-row">
               <button class="key-btn" @click="handleSpecialKey('home')">Home</button>
               <button class="key-btn" @click="handleSpecialKey('end')">End</button>
-              <button class="key-btn" @click="handleSpecialKey('backspace')">⌫</button>
+              <button
+                class="key-btn repeatable"
+                @mousedown="startRepeat('backspace')"
+                @mouseup="stopRepeat"
+                @mouseleave="stopRepeat"
+                @touchstart.prevent="startRepeat('backspace')"
+                @touchend="stopRepeat"
+              >⌫</button>
             </div>
             <div class="keyboard-row">
               <button class="key-btn danger" @click="handleSpecialKey('c-c')">Ctrl+C</button>
               <button class="key-btn" @click="handleSpecialKey('c-l')">Ctrl+L</button>
-              <button class="key-btn" @click="handleSpecialKey('c-d')">Ctrl+D</button>
               <button v-if="!inTmuxCopyMode" class="key-btn primary" @click="handleSpecialKey('tmux-copy')">滚动</button>
               <button v-else class="key-btn warning" @click="handleSpecialKey('exit-copy-mode')">退出滚动</button>
             </div>
@@ -176,13 +219,43 @@
             <div class="arrow-spacer"></div>
             <div class="arrow-row">
               <div class="arrow-placeholder"></div>
-              <button class="key-btn arrow" :class="{ 'primary': inTmuxCopyMode }" @click="inTmuxCopyMode ? handleSpecialKey('scroll-up') : handleSpecialKey('arrow-up')">↑</button>
+              <button
+                class="key-btn arrow repeatable"
+                :class="{ 'primary': inTmuxCopyMode }"
+                @mousedown="startRepeat(inTmuxCopyMode ? 'scroll-up' : 'arrow-up')"
+                @mouseup="stopRepeat"
+                @mouseleave="stopRepeat"
+                @touchstart.prevent="startRepeat(inTmuxCopyMode ? 'scroll-up' : 'arrow-up')"
+                @touchend="stopRepeat"
+              >↑</button>
               <div class="arrow-placeholder"></div>
             </div>
             <div class="arrow-row">
-              <button class="key-btn arrow" @click="handleSpecialKey('arrow-left')">←</button>
-              <button class="key-btn arrow" :class="{ 'primary': inTmuxCopyMode }" @click="inTmuxCopyMode ? handleSpecialKey('scroll-down') : handleSpecialKey('arrow-down')">↓</button>
-              <button class="key-btn arrow" @click="handleSpecialKey('arrow-right')">→</button>
+              <button
+                class="key-btn arrow repeatable"
+                @mousedown="startRepeat('arrow-left')"
+                @mouseup="stopRepeat"
+                @mouseleave="stopRepeat"
+                @touchstart.prevent="startRepeat('arrow-left')"
+                @touchend="stopRepeat"
+              >←</button>
+              <button
+                class="key-btn arrow repeatable"
+                :class="{ 'primary': inTmuxCopyMode }"
+                @mousedown="startRepeat(inTmuxCopyMode ? 'scroll-down' : 'arrow-down')"
+                @mouseup="stopRepeat"
+                @mouseleave="stopRepeat"
+                @touchstart.prevent="startRepeat(inTmuxCopyMode ? 'scroll-down' : 'arrow-down')"
+                @touchend="stopRepeat"
+              >↓</button>
+              <button
+                class="key-btn arrow repeatable"
+                @mousedown="startRepeat('arrow-right')"
+                @mouseup="stopRepeat"
+                @mouseleave="stopRepeat"
+                @touchstart.prevent="startRepeat('arrow-right')"
+                @touchend="stopRepeat"
+              >→</button>
             </div>
           </div>
         </div>
@@ -301,6 +374,7 @@ import {
   NSpin,
   NDropdown,
   NPopover,
+  NModal,
   useMessage
 } from 'naive-ui'
 import type { DropdownOption } from 'naive-ui'
@@ -315,11 +389,8 @@ import {
   Close as CloseIcon,
   Flash as BoltIcon,
   Mic as MicIcon,
-  ArrowUp as ArrowUpIcon,
-  ArrowDown as ArrowDownIcon,
-  ChevronUp as ChevronUpIcon,
-  ChevronDown as ChevronDownIcon,
-  SwapVertical as SwapVerticalIcon
+  SwapVertical as SwapVerticalIcon,
+  CopyOutline as CopyIcon
 } from '@vicons/ionicons5'
 import { useWebSocket } from '@/composables/useWebSocket'
 import { useSessionStore } from '@/stores/session'
@@ -379,6 +450,17 @@ const voiceSupported = ref(false)
 let recognition: SpeechRecognition | null = null
 let voiceTimeout: ReturnType<typeof setTimeout> | null = null
 
+// Repeat key state (for long press)
+let repeatInterval: ReturnType<typeof setInterval> | null = null
+let repeatTimeout: ReturnType<typeof setTimeout> | null = null
+
+// Select mode state
+const selectMode = ref(false)
+const selectableText = ref('')
+const selectableLines = ref<string[]>([])
+const selectedLines = ref<number[]>([])
+const lastSelectedLine = ref<number>(-1)
+
 // Special key options
 const specialKeyOptions: DropdownOption[] = [
   { label: '@ (文件引用)', key: 'at' },
@@ -397,7 +479,6 @@ const specialKeyOptions: DropdownOption[] = [
   { label: 'ESC', key: 'escape' },
   { label: 'ESC ESC (退出Claude)', key: 'escape-escape' },
   { label: 'Ctrl+C (中断)', key: 'c-c' },
-  { label: 'Ctrl+D (退出)', key: 'c-d' },
   { label: 'Ctrl+Z (暂停)', key: 'c-z' },
   { label: 'Ctrl+L (清屏)', key: 'c-l' },
   { type: 'divider', key: 'd1' },
@@ -528,6 +609,36 @@ function handleSpecialKey(key: string) {
   if (keyCode) {
     // Use sendKeys for special keys to avoid auto-adding Enter
     sendKeys(keyCode)
+  }
+}
+
+/**
+ * Start repeat key on long press
+ */
+function startRepeat(key: string) {
+  // Execute immediately first
+  handleSpecialKey(key)
+
+  // Start repeating after initial delay (300ms)
+  repeatTimeout = setTimeout(() => {
+    // Then repeat every 80ms
+    repeatInterval = setInterval(() => {
+      handleSpecialKey(key)
+    }, 80)
+  }, 300)
+}
+
+/**
+ * Stop repeat key
+ */
+function stopRepeat() {
+  if (repeatTimeout) {
+    clearTimeout(repeatTimeout)
+    repeatTimeout = null
+  }
+  if (repeatInterval) {
+    clearInterval(repeatInterval)
+    repeatInterval = null
   }
 }
 
@@ -744,6 +855,11 @@ function initTerminal() {
 
   terminalContainer.value.addEventListener('wheel', (e: WheelEvent) => {
     console.log('[Scroll] Wheel event, scrollMode:', scrollMode.value)
+
+    // In select mode, let browser handle scrolling for text selection
+    if (selectMode.value) {
+      return
+    }
 
     if (scrollMode.value !== 'remote') {
       // Local mode: let the browser handle scrolling
@@ -1154,6 +1270,131 @@ function handleClear() {
 }
 
 /**
+ * Copy terminal selection
+ */
+async function handleCopy() {
+  if (!terminal) return
+
+  try {
+    // Get selection from terminal
+    const selection = terminal.getSelection()
+
+    if (selection) {
+      // Copy selected text
+      await navigator.clipboard.writeText(selection)
+      message.success(t('terminal.copied'))
+      // Exit select mode after copy
+      selectMode.value = false
+    } else {
+      // No selection, prompt user to select
+      message.warning(t('terminal.selectToCopy'))
+    }
+  } catch (err) {
+    console.error('Failed to copy:', err)
+    message.error(t('terminal.copyFailed'))
+  }
+}
+
+/**
+ * Toggle select mode
+ */
+function toggleSelectMode() {
+  selectMode.value = !selectMode.value
+  if (selectMode.value) {
+    // Get all text from terminal buffer
+    if (terminal) {
+      const buffer = terminal.buffer.active
+      const lines: string[] = []
+      for (let i = 0; i < buffer.length; i++) {
+        const line = buffer.getLine(i)
+        if (line) {
+          lines.push(line.translateToString(true))
+        }
+      }
+      selectableText.value = lines.join('\n')
+      selectableLines.value = lines
+      selectedLines.value = []
+      lastSelectedLine.value = -1
+    }
+  }
+}
+
+/**
+ * Toggle line selection
+ */
+function toggleLineSelection(index: number, event?: MouseEvent) {
+  const idx = selectedLines.value.indexOf(index)
+
+  if (event?.shiftKey && lastSelectedLine.value >= 0) {
+    // Shift+click: select range (desktop)
+    const start = Math.min(lastSelectedLine.value, index)
+    const end = Math.max(lastSelectedLine.value, index)
+    for (let i = start; i <= end; i++) {
+      if (!selectedLines.value.includes(i)) {
+        selectedLines.value.push(i)
+      }
+    }
+  } else {
+    // Normal click: toggle selection (works on mobile too)
+    if (idx >= 0) {
+      selectedLines.value.splice(idx, 1)
+    } else {
+      selectedLines.value.push(index)
+    }
+  }
+
+  lastSelectedLine.value = index
+}
+
+/**
+ * Select all lines
+ */
+function selectAllLines() {
+  selectedLines.value = selectableLines.value.map((_, i) => i)
+}
+
+/**
+ * Clear selection
+ */
+function clearSelection() {
+  selectedLines.value = []
+  lastSelectedLine.value = -1
+}
+
+/**
+ * Copy selected lines
+ */
+async function copySelectedLines() {
+  if (selectedLines.value.length === 0) return
+
+  const sortedLines = [...selectedLines.value].sort((a, b) => a - b)
+  const text = sortedLines.map(i => selectableLines.value[i]).join('\n')
+
+  try {
+    await navigator.clipboard.writeText(text)
+    message.success(t('terminal.copied'))
+    selectMode.value = false
+  } catch (err) {
+    console.error('Failed to copy:', err)
+    message.error(t('terminal.copyFailed'))
+  }
+}
+
+/**
+ * Copy all text
+ */
+async function copyAllText() {
+  try {
+    await navigator.clipboard.writeText(selectableText.value)
+    message.success(t('terminal.copied'))
+    selectMode.value = false
+  } catch (err) {
+    console.error('Failed to copy:', err)
+    message.error(t('terminal.copyFailed'))
+  }
+}
+
+/**
  * Reconnect to session
  */
 function handleReconnect() {
@@ -1167,44 +1408,6 @@ function handleReconnect() {
   setTimeout(() => {
     connect()
   }, 500)
-}
-
-/**
- * Scroll terminal to top
- */
-function scrollToTop() {
-  if (terminal) {
-    terminal.scrollToTop()
-  }
-}
-
-/**
- * Scroll terminal to bottom
- */
-function scrollToBottom() {
-  if (terminal) {
-    terminal.scrollToBottom()
-  }
-}
-
-/**
- * Scroll terminal one page up
- */
-function scrollPageUp() {
-  if (terminal) {
-    const rows = terminal.rows
-    terminal.scrollLines(-rows)
-  }
-}
-
-/**
- * Scroll terminal one page down
- */
-function scrollPageDown() {
-  if (terminal) {
-    const rows = terminal.rows
-    terminal.scrollLines(rows)
-  }
 }
 
 /**
@@ -1298,6 +1501,9 @@ function exitTmuxCopyMode() {
  * Cleanup terminal
  */
 function cleanup() {
+  // Stop any repeating keys
+  stopRepeat()
+
   if (terminal) {
     // Cleanup viewport listeners
     if ((terminal as any)._cleanupViewportListeners) {
@@ -1343,6 +1549,12 @@ onUnmounted(() => {
   height: 100%;
   background: #2B2B2B;
   position: relative;
+}
+
+/* Allow text selection in select mode */
+.enhanced-terminal.selecting {
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 .terminal-header {
@@ -1412,6 +1624,103 @@ onUnmounted(() => {
 
 .terminal-container.remote-scroll-mode:focus-within {
   box-shadow: inset 0 0 0 2px rgba(74, 156, 255, 0.6);
+}
+
+/* Select mode - allow text selection */
+.terminal-container.select-mode {
+  box-shadow: inset 0 0 0 2px rgba(34, 197, 94, 0.6);
+}
+
+.terminal-container.select-mode :deep(.xterm-selection) {
+  /* Ensure selection layer is visible */
+  opacity: 1 !important;
+}
+
+/* Select mode fullscreen overlay */
+.select-mode-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.select-mode-dialog {
+  width: 90%;
+  max-width: 900px;
+  height: 85vh;
+  background: #2B2B2B;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.select-mode-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: #3C3F41;
+  border-bottom: 1px solid #4E5052;
+  color: #D4D4D4;
+  font-weight: 600;
+}
+
+.select-mode-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.select-mode-body {
+  flex: 1;
+  overflow: auto;
+  padding: 0;
+}
+
+.select-lines-container {
+  height: 100%;
+  overflow: auto;
+}
+
+.select-line {
+  display: flex;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background-color 0.1s;
+  font-family: 'Courier New', Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.select-line:hover {
+  background: rgba(74, 156, 255, 0.1);
+}
+
+.select-line.selected {
+  background: rgba(74, 156, 255, 0.3);
+}
+
+.line-number {
+  flex-shrink: 0;
+  width: 50px;
+  color: #6B7B8C;
+  text-align: right;
+  padding-right: 12px;
+  user-select: none;
+}
+
+.line-content {
+  flex: 1;
+  color: #D4D4D4;
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Enable xterm.js scrollbar with prominent styling */
