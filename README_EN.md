@@ -34,9 +34,10 @@ Remote Code provides remote access and control of these CLI tools through a web 
 - 🖥️ **Session Management**: Create, delete, view terminal sessions with persistence support
 - 📡 **Real-time Terminal**: WebSocket streaming for terminal output
 - 📜 **Terminal Scrolling**: tmux copy mode scrolling, view up to 5000 lines of history with visual scrollbar
+- 📋 **Terminal Copy**: Select mode for copying terminal content, works on both desktop and mobile
 - ⌨️ **Remote Control**: Send commands with realtime mode and command mode
 - ⌨️ **Keyboard Shortcuts**: Ctrl+B support
-- 📱 **Mobile Optimized**: Custom virtual keyboard with arrow keys, Tab, Ctrl+C, Enter, scroll mode toggle
+- 📱 **Mobile Optimized**: Custom virtual keyboard with arrow keys, Tab, Ctrl+C, Enter, scroll mode toggle, long-press repeat support
 - 🎤 **Voice Input**: Voice input support (requires HTTPS)
 - 📂 **File Browser**: Built-in file explorer
 - 🔒 **File Reference**: @ symbol for file references
@@ -47,6 +48,31 @@ Remote Code provides remote access and control of these CLI tools through a web 
 - 📜 **License**: Apache License 2.0
 
 ## What's New
+
+### v0.0.4 - Terminal Copy Feature
+
+**New Features**
+- ✨ New select mode for copying terminal content
+  - Click copy icon in toolbar to enter select mode
+  - Click lines to select content to copy
+  - Support select all and clear selection
+  - Desktop: Shift+click for range selection
+- ✨ Virtual keyboard keys support long-press repeat (arrow keys, backspace)
+
+**Improvements**
+- 🎯 Removed Ctrl+D button (prevents accidental tmux session closure)
+- 🎯 Removed scroll up/down buttons (simplified UI, use scroll mode instead)
+- 🎯 Optimized select mode UI for both desktop and mobile
+
+### v0.0.3 - Voice Input & FAQ
+
+**New Features**
+- ✨ Added voice input documentation
+- ✨ Added FAQ (Frequently Asked Questions)
+
+**Improvements**
+- 🎯 Fixed voice input focus issue
+- 🎯 Optimized session persistence
 
 ### v0.0.2 - Terminal Scrolling & Experience Improvements
 
@@ -283,9 +309,18 @@ Two input modes:
 - Use mouse wheel or scrollbar to view history output (up to 5000 lines)
 - Press **q** or click scroll button again to exit
 
+**Copy Terminal Content**
+- Click the **copy icon** in toolbar to enter select mode
+- In the popup window, **click lines** to select content to copy
+  - Desktop: **Shift+click** to quickly select a range
+  - Mobile: Tap multiple lines to select
+- Click **"Select All"** to select all content
+- Click **"Copy"** button to copy selected content
+- Click **"Close"** to exit select mode
+
 Mobile virtual keyboard:
-- Arrow keys (up/down/left/right)
-- Tab, Ctrl+C, Ctrl+D
+- Arrow keys (up/down/left/right), support long-press repeat
+- Tab, Ctrl+C, Ctrl+L
 - 📜 Scroll mode toggle
 - @ symbol (file reference)
 - 🎤 Voice input
