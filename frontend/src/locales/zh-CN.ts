@@ -163,7 +163,8 @@ export default {
     remoteScroll: '远程滚动（点击终端后滚动鼠标）',
     enterCopyMode: '进入tmux复制模式',
     exitCopyMode: '退出tmux复制模式',
-    copyModeHint: '使用方向键滚动，q退出，/搜索'
+    copyModeHint: '使用方向键滚动，q退出，/搜索',
+    toggleCodingMode: '切换编码模式'
   },
   sessions: {
     selectSession: '请从左侧选择一个会话',

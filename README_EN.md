@@ -276,10 +276,11 @@ Two input modes:
 
 Mobile virtual keyboard:
 - Arrow keys (up/down/left/right), support long-press repeat
-- Tab, Ctrl+C, Ctrl+L
+- Tab, Shift+Tab (toggle coding mode)
+- Ctrl+C, Ctrl+L
 - 📜 Scroll mode toggle
 - @ symbol (file reference)
-- 🎤 Voice input
+- 🎤 Voice input (press and hold to speak)
 
 ### 4. Voice Input
 
@@ -304,10 +305,15 @@ Voice input has browser security restrictions:
    - Blue highlight = realtime mode
    - Gray = command mode
 
-2. **Command mode usage** (recommended):
+2. **Voice input method**:
+   - **Press and hold** the 🎤 microphone button to start voice input
+   - **Release** the button when done speaking, recognition results will be processed
+   - Maximum recording time: 30 seconds
+
+3. **Command mode usage** (recommended):
    - Make sure the lightning button is gray (command mode)
-   - Click the 🎤 microphone button to start voice input
-   - After speaking, recognized text will be automatically filled in the command input
+   - Press and hold the 🎤 microphone button to start voice input
+   - Release when done, recognized text will be automatically filled in the command input
    - The input box will automatically focus, allowing you to edit any inaccurate recognition
    - Click "Send" or press Enter to send
 

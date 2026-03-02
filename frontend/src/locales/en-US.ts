@@ -163,7 +163,8 @@ export default {
     remoteScroll: 'Remote scroll (click terminal then scroll)',
     enterCopyMode: 'Enter tmux copy mode',
     exitCopyMode: 'Exit tmux copy mode',
-    copyModeHint: 'Use arrow keys to scroll, q to exit, / to search'
+    copyModeHint: 'Use arrow keys to scroll, q to exit, / to search',
+    toggleCodingMode: 'Toggle coding mode'
   },
   sessions: {
     selectSession: 'Please select a session from the sidebar',

@@ -193,6 +193,7 @@
               <button class="key-btn" @click="handleSpecialKey('at')">@</button>
               <button class="key-btn" @click="handleSpecialKey('slash')">/</button>
               <button class="key-btn" @click="handleSpecialKey('tab')">Tab</button>
+              <button class="key-btn primary" @click="handleSpecialKey('shift-tab')">Shift+Tab</button>
             </div>
             <div class="keyboard-row">
               <button class="key-btn" @click="handleSpecialKey('home')">Home</button>
@@ -281,7 +282,7 @@
           </template>
         </n-button>
 
-        <!-- Voice Input Button -->
+        <!-- Voice Input Button (Press and hold to speak) -->
         <n-tooltip trigger="hover">
           <template #trigger>
             <n-button
@@ -289,7 +290,12 @@
               size="small"
               :type="isListening ? 'error' : 'default'"
               :disabled="!voiceSupported || !connected"
-              @click="toggleVoiceInput"
+              @mousedown="startVoiceInput"
+              @mouseup="stopVoiceInput"
+              @mouseleave="cancelVoiceInput"
+              @touchstart.prevent="startVoiceInput"
+              @touchend="stopVoiceInput"
+              @touchcancel="cancelVoiceInput"
             >
               <template #icon>
                 <n-icon :class="{ 'mic-active': isListening }">
@@ -511,6 +517,12 @@ const { connected, error, kicked, connect, disconnect, sendCommand, sendKeys, en
 // Scroll mode: 'local' (scroll web view) or 'remote' (send to terminal)
 const scrollMode = ref<'local' | 'remote'>('local')
 
+// Touch scroll state for mobile
+let touchStartY = 0
+let touchStartX = 0
+let lastTouchY = 0
+let isTouchScrolling = false
+
 // Track if terminal is focused
 const terminalFocused = ref(false)
 
@@ -579,6 +591,13 @@ function handleSpecialKey(key: string) {
     exitCopyMode()
     inTmuxCopyMode.value = false
     message.info('退出tmux滚动模式')
+    return
+  }
+
+  // Handle shift-tab for mode toggle
+  if (key === 'shift-tab') {
+    sendKeys('\x1b[Z')
+    message.info(t('terminal.toggleCodingMode'))
     return
   }
 
@@ -739,9 +758,9 @@ function initVoiceRecognition() {
 }
 
 /**
- * Toggle voice input
+ * Start voice input (called when button is pressed)
  */
-function toggleVoiceInput() {
+function startVoiceInput() {
   if (!recognition) {
     initVoiceRecognition()
     if (!recognition) {
@@ -750,24 +769,53 @@ function toggleVoiceInput() {
     }
   }
 
-  if (isListening.value) {
-    recognition.stop()
-    isListening.value = false
-  } else {
-    try {
-      recognition.start()
+  if (isListening.value) return
 
-      // Auto-stop after 10 seconds
-      voiceTimeout = setTimeout(() => {
-        if (recognition && isListening.value) {
-          recognition.stop()
-          message.info(t('terminal.voiceTimeout'))
-        }
-      }, 10000)
-    } catch (e) {
-      console.error('Failed to start recognition:', e)
-      message.error(t('terminal.voiceStartFailed'))
-    }
+  try {
+    recognition.start()
+    // Auto-stop after 30 seconds
+    voiceTimeout = setTimeout(() => {
+      if (recognition && isListening.value) {
+        recognition.stop()
+        message.info(t('terminal.voiceTimeout'))
+      }
+    }, 30000)
+  } catch (e) {
+    console.error('Failed to start recognition:', e)
+    message.error(t('terminal.voiceStartFailed'))
+  }
+}
+
+/**
+ * Stop voice input (called when button is released)
+ */
+function stopVoiceInput() {
+  if (!isListening.value) return
+
+  if (voiceTimeout) {
+    clearTimeout(voiceTimeout)
+    voiceTimeout = null
+  }
+
+  if (recognition) {
+    recognition.stop()
+  }
+}
+
+/**
+ * Cancel voice input (called when finger/mouse leaves button)
+ */
+function cancelVoiceInput() {
+  if (!isListening.value) return
+
+  if (voiceTimeout) {
+    clearTimeout(voiceTimeout)
+    voiceTimeout = null
+  }
+
+  if (recognition) {
+    recognition.abort() // Use abort() to cancel without sending results
+    isListening.value = false
   }
 }
 
@@ -913,6 +961,62 @@ function initTerminal() {
     }, 200)
   }, { passive: false })
 
+  // Native touch event handlers with capture phase for mobile scrolling
+  // These intercept touch events before xterm.js can process them
+  const nativeTouchStart = (e: TouchEvent) => {
+    if (scrollMode.value === 'remote' || selectMode.value) return
+
+    const touch = e.touches[0]
+    touchStartY = touch.clientY
+    touchStartX = touch.clientX
+    lastTouchY = touch.clientY
+    isTouchScrolling = false
+  }
+
+  const nativeTouchMove = (e: TouchEvent) => {
+    if (scrollMode.value === 'remote' || selectMode.value) return
+
+    const touch = e.touches[0]
+    const deltaY = lastTouchY - touch.clientY
+    const deltaX = Math.abs(touch.clientX - touchStartX)
+
+    // Only start scrolling if vertical movement is dominant
+    if (!isTouchScrolling && Math.abs(deltaY) > 5 && deltaX < Math.abs(deltaY)) {
+      isTouchScrolling = true
+    }
+
+    if (isTouchScrolling && terminal) {
+      // Prevent xterm.js from handling this event
+      e.preventDefault()
+      // Use xterm.js API for scrolling
+      const scrollAmount = Math.round(deltaY / 8)
+      terminal.scrollLines(scrollAmount)
+    }
+
+    lastTouchY = touch.clientY
+  }
+
+  const nativeTouchEnd = () => {
+    isTouchScrolling = false
+  }
+
+  // Add touch event listeners with capture phase
+  terminalContainer.value.addEventListener('touchstart', nativeTouchStart, { passive: true, capture: true })
+  terminalContainer.value.addEventListener('touchmove', nativeTouchMove, { passive: false, capture: true })
+  terminalContainer.value.addEventListener('touchend', nativeTouchEnd, { passive: true, capture: true })
+
+  // Store cleanup function for touch listeners
+  const cleanupTouchListeners = () => {
+    terminalContainer.value?.removeEventListener('touchstart', nativeTouchStart, { capture: true } as EventListenerOptions)
+    terminalContainer.value?.removeEventListener('touchmove', nativeTouchMove, { capture: true } as EventListenerOptions)
+    terminalContainer.value?.removeEventListener('touchend', nativeTouchEnd, { capture: true } as EventListenerOptions)
+  }
+
+  // Attach to terminal instance for cleanup
+  if (terminal) {
+    (terminal as any)._cleanupTouchListeners = cleanupTouchListeners
+  }
+
   // Auto-focus terminal when mouse enters (optional, for better UX)
   terminalContainer.value.addEventListener('mouseenter', () => {
     if (scrollMode.value === 'remote' && terminal) {
@@ -993,6 +1097,14 @@ function handleKeyDown(e: KeyboardEvent) {
       inTmuxCopyMode.value = false
       message.info('退出tmux滚动模式')
     }
+    return
+  }
+
+  // Handle Shift+Tab for Claude Code auto-accept edit mode toggle
+  if (e.key === 'Tab' && e.shiftKey) {
+    e.preventDefault()
+    sendKeys('\x1b[Z') // ESC Z - backward tab for mode toggle
+    message.info(t('terminal.toggleCodingMode'))
     return
   }
 
@@ -1509,6 +1621,10 @@ function cleanup() {
     if ((terminal as any)._cleanupViewportListeners) {
       ;(terminal as any)._cleanupViewportListeners()
     }
+    // Cleanup touch listeners
+    if ((terminal as any)._cleanupTouchListeners) {
+      ;(terminal as any)._cleanupTouchListeners()
+    }
     terminal.dispose()
     terminal = null
   }
@@ -1600,6 +1716,7 @@ onUnmounted(() => {
   overflow: hidden;
   background: #1E1E1E;
   position: relative;
+  touch-action: pan-y;
   display: flex;
   flex-direction: column;
   cursor: text; /* Show text cursor to indicate terminal is clickable */
@@ -1739,6 +1856,7 @@ onUnmounted(() => {
   scrollbar-color: #4A9CFF #1E1E1E;
   /* Ensure viewport takes full height */
   height: 100% !important;
+  touch-action: pan-y;
 }
 
 /* Webkit scrollbar (Chrome, Safari, Edge) */
@@ -1815,10 +1933,12 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   background: #3C3F41;
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 .custom-keyboard {
   padding: 8px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0));
   background: #2B2B2B;
   border-top: 1px solid #4E5052;
 }
@@ -2082,6 +2202,7 @@ onUnmounted(() => {
 
   .custom-keyboard {
     padding: 6px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0));
   }
 
   .keyboard-main {
