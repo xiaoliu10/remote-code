@@ -47,6 +47,38 @@ Remote Code provides remote access and control of these CLI tools through a web 
 - 🌍 **i18n**: Chinese and English support
 - 📜 **License**: Apache License 2.0
 
+## What's New
+
+> For complete changelog, see [CHANGELOG.md](./CHANGELOG.md)
+
+### v0.0.5 - Mobile UX Improvements
+
+**New Features**
+- ✨ Terminal select mode for copying terminal content (works on both desktop and mobile)
+- ✨ Shift+Tab button added to virtual keyboard for code indentation
+
+**Improvements**
+- 🎯 Arrow keys (↑↓←→) support long-press repeat for smoother mobile operation
+- 🎯 Backspace (⌫) supports long-press repeat
+- 🎯 Simplified terminal header toolbar, removed scroll control buttons
+
+### v0.0.4 - Terminal Copy Feature
+
+**New Features**
+- ✨ Terminal select mode for selecting and copying terminal content
+- ✨ Select all, clear selection, copy selected content
+
+### v0.0.3 - FAQ & Bug Fixes
+
+**New Features**
+- ✨ Added [FAQ documentation](./docs/FAQ.md)
+
+**Improvements**
+- 🎯 Fixed session persistence issue
+- 🎯 Fixed voice input focus issue
+- 🎯 Each session now connects to its own tmux session
+- 🎯 Unified Ctrl+B as tmux shortcut on all platforms
+
 ## Tech Stack
 
 ### Backend
@@ -427,24 +459,6 @@ See [FAQ - Claude Code Nested Sessions](./docs/FAQ.md#1-在-remote-code-中运�
 2. **Use HTTPS**: Always use HTTPS in production
 3. **Regular Updates**: Keep dependencies up to date
 4. **Restrict Access**: Use firewall to limit access
-
-## Version History
-
-> For complete changelog, see [CHANGELOG.md](./CHANGELOG.md)
-
-### v0.0.5 (2026-03-03)
-- 📋 **Terminal Copy**: Select mode for copying terminal content
-- 📱 **Mobile UX**: Arrow keys and backspace support long-press repeat
-- ⌨️ **Shift+Tab Button**: Convenient for code indentation
-
-### v0.0.4 (2026-03-02)
-- 📋 **Terminal Copy**: Select mode for copying terminal content
-- 🔧 Mobile UX improvements
-
-### v0.0.3 (2026-03-01)
-- 📚 Added [FAQ documentation](./docs/FAQ.md)
-- 🔧 Fixed session persistence and voice input issues
-- ⌨️ Unified Ctrl+B as tmux shortcut
 
 ## License
 
