@@ -198,6 +198,7 @@
             <div class="keyboard-row">
               <button class="key-btn" @click="handleSpecialKey('home')">Home</button>
               <button class="key-btn" @click="handleSpecialKey('end')">End</button>
+              <button class="key-btn danger" @click="handleSpecialKey('clear-input')">清空</button>
               <button
                 class="key-btn repeatable"
                 @mousedown="startRepeat('backspace')"
@@ -546,6 +547,13 @@ watch(scrollMode, (newMode, oldMode) => {
  * Handle special key selection
  */
 function handleSpecialKey(key: string) {
+  // Handle clear input - clear the web page input field (no connection needed)
+  if (key === 'clear-input') {
+    currentCommand.value = ''
+    commandInputRef.value?.focus()
+    return
+  }
+
   if (!connected.value) {
     message.warning(t('terminal.notConnected'))
     return
@@ -2007,6 +2015,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  touch-action: manipulation; /* Prevent double-tap zoom on mobile */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .key-btn.arrow {
