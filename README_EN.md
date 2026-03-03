@@ -428,6 +428,24 @@ See [FAQ - Claude Code Nested Sessions](./docs/FAQ.md#1-在-remote-code-中运�
 3. **Regular Updates**: Keep dependencies up to date
 4. **Restrict Access**: Use firewall to limit access
 
+## Version History
+
+> For complete changelog, see [CHANGELOG.md](./CHANGELOG.md)
+
+### v0.0.5 (2026-03-03)
+- 📋 **Terminal Copy**: Select mode for copying terminal content
+- 📱 **Mobile UX**: Arrow keys and backspace support long-press repeat
+- ⌨️ **Shift+Tab Button**: Convenient for code indentation
+
+### v0.0.4 (2026-03-02)
+- 📋 **Terminal Copy**: Select mode for copying terminal content
+- 🔧 Mobile UX improvements
+
+### v0.0.3 (2026-03-01)
+- 📚 Added [FAQ documentation](./docs/FAQ.md)
+- 🔧 Fixed session persistence and voice input issues
+- ⌨️ Unified Ctrl+B as tmux shortcut
+
 ## License
 
 Apache License 2.0
