@@ -47,50 +47,6 @@ Remote Code provides remote access and control of these CLI tools through a web 
 - 🌍 **i18n**: Chinese and English support
 - 📜 **License**: Apache License 2.0
 
-## What's New
-
-### v0.0.4 - Terminal Copy Feature
-
-**New Features**
-- ✨ New select mode for copying terminal content
-  - Click copy icon in toolbar to enter select mode
-  - Click lines to select content to copy
-  - Support select all and clear selection
-  - Desktop: Shift+click for range selection
-- ✨ Virtual keyboard keys support long-press repeat (arrow keys, backspace)
-
-**Improvements**
-- 🎯 Removed Ctrl+D button (prevents accidental tmux session closure)
-- 🎯 Removed scroll up/down buttons (simplified UI, use scroll mode instead)
-- 🎯 Optimized select mode UI for both desktop and mobile
-
-### v0.0.3 - Voice Input & FAQ
-
-**New Features**
-- ✨ Added voice input documentation
-- ✨ Added FAQ (Frequently Asked Questions)
-
-**Improvements**
-- 🎯 Fixed voice input focus issue
-- 🎯 Optimized session persistence
-
-### v0.0.2 - Terminal Scrolling & Experience Improvements
-
-**New Features**
-- ✨ Added terminal scroll mode with tmux copy mode support (default 1000 lines, configurable)
-- ✨ Added visual scrollbar with mouse wheel support
-- ✨ New scroll mode toggle button in virtual keyboard
-- ✨ Keyboard shortcuts: Ctrl+B to toggle scroll mode
-- ✨ tmux session persistence - auto-restore sessions after restart
-- ✨ Configuration wizard on first run
-
-**Improvements**
-- 🎯 Improved terminal focus management with visual feedback
-- 🎯 Fixed mobile viewport zoom issue after keyboard closes
-- 🎯 Fixed 502 Bad Gateway issue in Docker deployment
-- 🎯 Fixed multi-device connection conflict handling
-- 🎯 Fixed session deletion error handling
-
 ## Tech Stack
 
 ### Backend
@@ -320,10 +276,11 @@ Two input modes:
 
 Mobile virtual keyboard:
 - Arrow keys (up/down/left/right), support long-press repeat
-- Tab, Ctrl+C, Ctrl+L
+- Tab, Shift+Tab (toggle coding mode)
+- Ctrl+C, Ctrl+L
 - 📜 Scroll mode toggle
 - @ symbol (file reference)
-- 🎤 Voice input
+- 🎤 Voice input (press and hold to speak)
 
 ### 4. Voice Input
 
@@ -348,10 +305,15 @@ Voice input has browser security restrictions:
    - Blue highlight = realtime mode
    - Gray = command mode
 
-2. **Command mode usage** (recommended):
+2. **Voice input method**:
+   - **Press and hold** the 🎤 microphone button to start voice input
+   - **Release** the button when done speaking, recognition results will be processed
+   - Maximum recording time: 30 seconds
+
+3. **Command mode usage** (recommended):
    - Make sure the lightning button is gray (command mode)
-   - Click the 🎤 microphone button to start voice input
-   - After speaking, recognized text will be automatically filled in the command input
+   - Press and hold the 🎤 microphone button to start voice input
+   - Release when done, recognized text will be automatically filled in the command input
    - The input box will automatically focus, allowing you to edit any inaccurate recognition
    - Click "Send" or press Enter to send
 
