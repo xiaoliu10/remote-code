@@ -55,7 +55,7 @@ Remote Code provides remote access and control of these CLI tools through a web 
 
 **New Features**
 - ✨ Terminal select mode for copying terminal content (works on both desktop and mobile)
-- ✨ Shift+Tab button added to virtual keyboard for code indentation
+- ✨ Shift+Tab button added to virtual keyboard for switching Claude Code coding modes
 
 **Improvements**
 - 🎯 Arrow keys (↑↓←→) support long-press repeat for smoother mobile operation
