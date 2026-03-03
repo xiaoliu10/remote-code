@@ -47,6 +47,38 @@ Remote Code provides remote access and control of these CLI tools through a web 
 - 🌍 **i18n**: Chinese and English support
 - 📜 **License**: Apache License 2.0
 
+## What's New
+
+> For complete changelog, see [CHANGELOG.md](./CHANGELOG.md)
+
+### v0.0.5 - Mobile UX Improvements
+
+**New Features**
+- ✨ Terminal select mode for copying terminal content (works on both desktop and mobile)
+- ✨ Shift+Tab button added to virtual keyboard for code indentation
+
+**Improvements**
+- 🎯 Arrow keys (↑↓←→) support long-press repeat for smoother mobile operation
+- 🎯 Backspace (⌫) supports long-press repeat
+- 🎯 Simplified terminal header toolbar, removed scroll control buttons
+
+### v0.0.4 - Terminal Copy Feature
+
+**New Features**
+- ✨ Terminal select mode for selecting and copying terminal content
+- ✨ Select all, clear selection, copy selected content
+
+### v0.0.3 - FAQ & Bug Fixes
+
+**New Features**
+- ✨ Added [FAQ documentation](./docs/FAQ.md)
+
+**Improvements**
+- 🎯 Fixed session persistence issue
+- 🎯 Fixed voice input focus issue
+- 🎯 Each session now connects to its own tmux session
+- 🎯 Unified Ctrl+B as tmux shortcut on all platforms
+
 ## Tech Stack
 
 ### Backend
