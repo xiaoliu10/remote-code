@@ -213,6 +213,7 @@
               <button class="key-btn" @click="handleSpecialKey('c-l')">Ctrl+L</button>
               <button v-if="!inTmuxCopyMode" class="key-btn primary" @click="handleSpecialKey('tmux-copy')">滚动</button>
               <button v-else class="key-btn warning" @click="handleSpecialKey('exit-copy-mode')">退出滚动</button>
+              <button class="key-btn" :class="{ 'primary': showDebugPanel }" @click="handleSpecialKey('debug-panel')">调试</button>
             </div>
           </div>
 
@@ -362,6 +363,22 @@
         {{ t('terminal.reconnect') }}
       </n-button>
     </div>
+
+    <!-- Debug Panel (temporary) -->
+    <div v-if="showDebugPanel" class="debug-panel">
+      <div class="debug-header">
+        <span>调试面板</span>
+        <n-button size="tiny" @click="showDebugPanel = false">关闭</n-button>
+      </div>
+      <div class="debug-content">
+        <div v-for="(log, index) in debugLogs" :key="index" class="debug-log">
+          {{ log }}
+        </div>
+      </div>
+      <div class="debug-footer">
+        <n-button size="tiny" @click="debugLogs = []">清空</n-button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -449,6 +466,21 @@ const atPosition = ref(-1)
 const realtimeMode = ref(true) // true = realtime input, false = command mode
 const showCustomKeyboard = ref(false) // Show custom keyboard on mobile
 const isComposing = ref(false) // Track IME composition state
+
+// Debug panel state (temporary)
+const showDebugPanel = ref(false)
+const debugLogs = ref<string[]>([])
+
+function debugLog(message: string, data?: any) {
+  const timestamp = new Date().toLocaleTimeString()
+  const log = data ? `[${timestamp}] ${message}: ${JSON.stringify(data)}` : `[${timestamp}] ${message}`
+  debugLogs.value.push(log)
+  console.log(message, data || '')
+  // Keep only last 20 logs
+  if (debugLogs.value.length > 20) {
+    debugLogs.value.shift()
+  }
+}
 const lastSentLength = ref(0) // Track last sent position for realtime mode
 
 // Voice input state
@@ -456,6 +488,7 @@ const isListening = ref(false)
 const voiceSupported = ref(false)
 let recognition: SpeechRecognition | null = null
 let voiceTimeout: ReturnType<typeof setTimeout> | null = null
+let lastProcessedTranscript = '' // Track last processed transcript to avoid duplicates
 
 // Repeat key state (for long press)
 let repeatInterval: ReturnType<typeof setInterval> | null = null
@@ -492,7 +525,9 @@ const specialKeyOptions: DropdownOption[] = [
   { label: 'Enter', key: 'enter' },
   { label: 'Tab', key: 'tab' },
   { label: 'Backspace', key: 'backspace' },
-  { label: 'Delete', key: 'delete' }
+  { label: 'Delete', key: 'delete' },
+  { type: 'divider', key: 'd-debug' },
+  { label: '🐛 调试面板', key: 'debug-panel' }
 ]
 
 // Computed filtered files
@@ -602,6 +637,13 @@ function handleSpecialKey(key: string) {
     return
   }
 
+  // Handle debug panel toggle
+  if (key === 'debug-panel') {
+    showDebugPanel.value = !showDebugPanel.value
+    message.info(showDebugPanel.value ? '调试面板已开启' : '调试面板已关闭')
+    return
+  }
+
   // Handle shift-tab for mode toggle
   if (key === 'shift-tab') {
     sendKeys('\x1b[Z')
@@ -691,9 +733,11 @@ function initVoiceRecognition() {
 
   recognition.onstart = () => {
     isListening.value = true
+    debugLog('[Voice] started')
   }
 
   recognition.onend = () => {
+    debugLog('[Voice] ended', { isListening: isListening.value })
     isListening.value = false
     if (voiceTimeout) {
       clearTimeout(voiceTimeout)
@@ -708,6 +752,7 @@ function initVoiceRecognition() {
   }
 
   recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+    debugLog('[Voice] error', { error: event.error })
     console.error('Speech recognition error:', event.error)
     isListening.value = false
 
@@ -733,34 +778,86 @@ function initVoiceRecognition() {
       }
     }
 
+    debugLog('[Voice] result', {
+      realtimeMode: realtimeMode.value,
+      finalTranscript,
+      interimTranscript,
+      currentCommand: currentCommand.value
+    })
+
+    // If only interim result, use it as final (workaround for some browsers)
+    if (!finalTranscript && interimTranscript) {
+      debugLog('[Voice] using interimTranscript as final')
+      finalTranscript = interimTranscript
+    }
+
+    // Skip if we've already processed this transcript (avoid duplicates)
+    if (finalTranscript && lastProcessedTranscript === finalTranscript) {
+      debugLog('[Voice] skipping duplicate transcript')
+      return
+    }
+
     // Update command with recognized text
     if (finalTranscript) {
       // Handle final result
       const text = finalTranscript.trim()
+
+      // Calculate incremental text (only the new part)
+      let incrementalText = text
+      if (lastProcessedTranscript && text.startsWith(lastProcessedTranscript)) {
+        // The new result contains the previous result as prefix, extract only the new part
+        incrementalText = text.slice(lastProcessedTranscript.length)
+        debugLog('[Voice] incremental text', {
+          lastProcessed: lastProcessedTranscript,
+          fullText: text,
+          incremental: incrementalText
+        })
+      }
+
+      // Skip if no new content
+      if (!incrementalText) {
+        debugLog('[Voice] no incremental text, skipping')
+        return
+      }
+
+      // Mark as processed to avoid duplicates (for both modes)
+      lastProcessedTranscript = text
+
+      debugLog('[Voice] processing text', { incrementalText, realtimeMode: realtimeMode.value })
+
       if (realtimeMode.value) {
-        // In realtime mode, send each character and update tracking
-        sendKeys(text)
+        // In realtime mode, send only the incremental text
+        sendKeys(incrementalText)
         if (terminal) {
-          terminal.write(text)
+          terminal.write(incrementalText)
         }
         // Update currentCommand and lastSentLength to keep them in sync
         // This ensures subsequent manual input works correctly
-        currentCommand.value += text
+        currentCommand.value += incrementalText
         lastSentLength.value = currentCommand.value.length
+        debugLog('[Voice] realtime mode updated', { currentCommand: currentCommand.value })
       } else {
         // In command mode, append to current command
-        currentCommand.value += text
+        const before = currentCommand.value
+        currentCommand.value += incrementalText
+        debugLog('[Voice] command mode updated', {
+          before,
+          after: currentCommand.value,
+          incrementalText
+        })
       }
 
       // Auto-send after a short delay if in command mode and text ends with certain patterns
       if (!realtimeMode.value) {
         // Don't auto-send, let user review and send manually
-        message.success(t('terminal.voiceRecognized') + ': ' + text)
         // 语音识别到结果后，聚焦到输入框方便用户修改
         nextTick(() => {
           commandInputRef.value?.focus()
+          debugLog('[Voice] focus called', { currentCommand: currentCommand.value })
         })
       }
+    } else {
+      debugLog('[Voice] no finalTranscript', { interimTranscript })
     }
   }
 }
@@ -769,6 +866,7 @@ function initVoiceRecognition() {
  * Start voice input (called when button is pressed)
  */
 function startVoiceInput() {
+  debugLog('[Voice] startVoiceInput called', { recognition: !!recognition, isListening: isListening.value })
   if (!recognition) {
     initVoiceRecognition()
     if (!recognition) {
@@ -779,8 +877,12 @@ function startVoiceInput() {
 
   if (isListening.value) return
 
+  // Reset last processed transcript for new voice input session
+  lastProcessedTranscript = ''
+
   try {
     recognition.start()
+    debugLog('[Voice] recognition.start() called')
     // Auto-stop after 30 seconds
     voiceTimeout = setTimeout(() => {
       if (recognition && isListening.value) {
@@ -910,7 +1012,7 @@ function initTerminal() {
   let scrollTimeout: number | null = null
 
   terminalContainer.value.addEventListener('wheel', (e: WheelEvent) => {
-    console.log('[Scroll] Wheel event, scrollMode:', scrollMode.value)
+    debugLog('[Scroll] Wheel event', { scrollMode: scrollMode.value })
 
     // In select mode, let browser handle scrolling for text selection
     if (selectMode.value) {
@@ -923,7 +1025,7 @@ function initTerminal() {
     }
 
     if (!connected.value) {
-      console.log('[Scroll] Not connected')
+      debugLog('[Scroll] Not connected')
       return
     }
 
@@ -940,7 +1042,7 @@ function initTerminal() {
     // Auto-exit copy mode after 3 seconds of no scrolling
     scrollTimeout = window.setTimeout(() => {
       if (inTmuxCopyMode.value) {
-        console.log('[Scroll] Auto-exit copy mode')
+        debugLog('[Scroll] Auto-exit copy mode')
         exitCopyMode()
         inTmuxCopyMode.value = false
       }
@@ -948,7 +1050,7 @@ function initTerminal() {
 
     // Enter copy mode if not already in it
     if (!inTmuxCopyMode.value) {
-      console.log('[Scroll] Entering copy mode via tmux command')
+      debugLog('[Scroll] Entering copy mode via tmux command')
       enterCopyMode()
       inTmuxCopyMode.value = true
     }
@@ -957,7 +1059,7 @@ function initTerminal() {
     setTimeout(() => {
       // Scroll more lines at once for visible effect
       const scrollAmount = Math.min(Math.ceil(Math.abs(e.deltaY) / 20), 10) // Increased from /30,5 to /20,10
-      console.log('[Scroll] Scrolling, amount:', scrollAmount, 'direction:', e.deltaY < 0 ? 'up' : 'down')
+      debugLog('[Scroll] Scrolling', { amount: scrollAmount, direction: e.deltaY < 0 ? 'up' : 'down' })
 
       if (e.deltaY < 0) {
         // Scroll up
@@ -1093,6 +1195,14 @@ function initTerminal() {
  * Handle keyboard events in command input
  */
 function handleKeyDown(e: KeyboardEvent) {
+  // Handle Ctrl+Shift+D for debug panel toggle
+  if (e.key === 'D' && e.ctrlKey && e.shiftKey) {
+    e.preventDefault()
+    showDebugPanel.value = !showDebugPanel.value
+    message.info(showDebugPanel.value ? '调试面板已开启' : '调试面板已关闭')
+    return
+  }
+
   // Handle Ctrl+B for tmux copy mode (all platforms)
   if (e.key === 'b' && e.ctrlKey) {
     e.preventDefault()
@@ -1182,11 +1292,11 @@ function navigateHistory(direction: number) {
 function handleInputChange(value: string) {
   // Don't process during IME composition
   if (isComposing.value) {
-    console.log('[Input] IME composing, skipping')
+    debugLog('[Input] IME composing, skipping')
     return
   }
 
-  console.log('[Input] handleInputChange:', {
+  debugLog('[Input] handleInputChange', {
     value,
     realtimeMode: realtimeMode.value,
     connected: connected.value,
@@ -1199,12 +1309,12 @@ function handleInputChange(value: string) {
     if (newLength > lastSentLength.value) {
       // Send new characters
       const newChars = value.slice(lastSentLength.value)
-      console.log('[Input] Sending new chars:', newChars)
+      debugLog('[Input] Sending new chars', { newChars })
       sendKeys(newChars)
     } else if (newLength < lastSentLength.value) {
       // Characters were deleted - send backspace for each deleted char
       const deletedCount = lastSentLength.value - newLength
-      console.log('[Input] Sending backspace x', deletedCount)
+      debugLog('[Input] Sending backspace', { deletedCount })
       for (let i = 0; i < deletedCount; i++) {
         sendKeys('\x7f') // Backspace
       }
@@ -1305,13 +1415,13 @@ function sendCurrentCommand() {
     if (unsentLength > 0) {
       // There are unsent characters, send them first
       const unsentChars = cmd.slice(lastSentLength.value)
-      console.log('[Send] Sending unsent chars:', unsentChars)
+      debugLog('[Send] Sending unsent chars', { unsentChars })
       sendKeys(unsentChars)
     } else if (unsentLength < 0) {
       // Characters were deleted but not sent to terminal
       // Send backspace for each deleted char
       const deletedCount = -unsentLength
-      console.log('[Send] Sending backspace x', deletedCount)
+      debugLog('[Send] Sending backspace', { deletedCount })
       for (let i = 0; i < deletedCount; i++) {
         sendKeys('\x7f')
       }
@@ -2314,5 +2424,50 @@ onUnmounted(() => {
   50% {
     color: #ff6b6b;
   }
+}
+
+/* Debug Panel Styles (temporary) */
+.debug-panel {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  max-height: 150px;
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid #444;
+  border-radius: 8px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+}
+
+.debug-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #333;
+  border-radius: 8px 8px 0 0;
+  color: #fff;
+  font-size: 12px;
+}
+
+.debug-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.debug-log {
+  color: #0f0;
+  padding: 2px 0;
+  word-break: break-all;
+}
+
+.debug-footer {
+  padding: 8px;
+  border-top: 1px solid #444;
 }
 </style>
